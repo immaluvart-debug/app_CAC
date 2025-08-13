@@ -29,22 +29,9 @@
 		4B29345D2E4AF4A400927095 /* app_CACUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = app_CACUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		4B581E562E4BEF350092ADEA /* Exceptions for "app_CAC" folder in "app_CAC" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"app-CAC-Info.plist",
-			);
-			target = 4B2934452E4AF4A000927095 /* app_CAC */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		4B2934482E4AF4A000927095 /* app_CAC */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				4B581E562E4BEF350092ADEA /* Exceptions for "app_CAC" folder in "app_CAC" target */,
-			);
 			path = app_CAC;
 			sourceTree = "<group>";
 		};

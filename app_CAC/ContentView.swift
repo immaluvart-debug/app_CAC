@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 import Vision
 import CoreML
 import PhotosUI
@@ -6,125 +7,183 @@ import PhotosUI
 struct ContentView: View {
     @State private var selectedImage: UIImage?
     @State private var classificationResult: String = "No image classified yet"
-    @State private var showPhotoPicker = false
-    @State private var showCamera = false
-    @State private var photoItem: PhotosPickerItem? // @state combines the internal stuff with the view
+    @State private var greenScoreResult: String = ""
+    @State private var isShowingScanner = false
+    @State private var photoItem: PhotosPickerItem? = nil
     
     var body: some View {
-        VStack(spacing: 20) { //20 pixels spacing around the stack, Everyhing in the vstack stacks horizontallly
-            
-            //display the img
-            if let selectedImage { //if let is a safe way to bind optional values. if somehow there is no pic taken then it will not cause an error basically (IF the image is there LET it show)
-                Image(uiImage: selectedImage)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 200)
-            }
-            
-            // Display classification result
-            Text(classificationResult)
-                .font(.title)
-                .multilineTextAlignment(.center)
-                .padding()
-            
-            // Pick from photo library
-            PhotosPicker("Pick an Image", selection: $photoItem, matching: .images)
+        NavigationView {
+            VStack(spacing: 25) {
+                // Display selected image
+                if let selectedImage {
+                    Image(uiImage: selectedImage)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxHeight: 250)
+                        .cornerRadius(12)
+                }
+                
+                // Classification result
+                Text(classificationResult)
+                    .font(.headline)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.gray.opacity(0.15))
+                    .cornerRadius(8)
+                
+                // Green Score result
+                if !greenScoreResult.isEmpty {
+                    Text("Green Score: \(greenScoreResult)")
+                        .font(.title2)
+                        .foregroundColor(.green)
+                        .padding()
+                }
+                
+                // Buttons
+                PhotosPicker("Classify Image", selection: $photoItem, matching: .images)
+                    .font(.headline)
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .clipShape(Capsule())
+                    .onChange(of: photoItem) { newItem in
+                        Task {
+                            if let data = try? await newItem?.loadTransferable(type: Data.self),
+                               let uiImage = UIImage(data: data) {
+                                selectedImage = uiImage
+                                classifyImage(uiImage)
+                            }
+                        }
+                    }
+                
+                Button("Scan Barcode for Green Score") {
+                    isShowingScanner = true
+                }
                 .font(.headline)
                 .padding()
-                .background(Color.blue)
+                .background(Color.green)
                 .foregroundColor(.white)
                 .clipShape(Capsule())
-                .onChange(of: photoItem) { _ in
-                    loadImageFromPicker()
-                }
-            
-            // Capture from camera
-            Button("Use Live Camera") {
-                showCamera = true
             }
-            .font(.headline)
             .padding()
-            .background(Color.green)
-            .foregroundColor(.white)
-            .clipShape(Capsule())
-            .sheet(isPresented: $showCamera) {
-                ImagePicker(sourceType: .camera) { image in
-                    selectedImage = image
-                    classifyImage(image)
+            .navigationTitle("Food Scanner")
+            .sheet(isPresented: $isShowingScanner) {
+                BarcodeScannerView { barcode in
+                    isShowingScanner = false
+                    fetchGreenScore(for: barcode)
                 }
             }
         }
-        .padding()
     }
     
-    
-    func loadImageFromPicker() {
-        Task {
-            if let data = try? await photoItem?.loadTransferable(type: Data.self),
-               let uiImage = UIImage(data: data) {
-                selectedImage = uiImage
-                classifyImage(uiImage)
+    // MARK: - Classification
+    func classifyImage(_ image: UIImage) {
+        guard let ciImage = CIImage(image: image) else { return }
+        do {
+            let model = try VNCoreMLModel(for: MobileNet().model) // <-- Your model
+            let request = VNCoreMLRequest(model: model) { request, _ in
+                if let result = request.results?.first as? VNClassificationObservation {
+                    DispatchQueue.main.async {
+                        classificationResult = "\(result.identifier) (\(String(format: "%.1f", result.confidence * 100))%)"
+                    }
+                }
             }
+            try VNImageRequestHandler(ciImage: ciImage).perform([request])
+        } catch {
+            classificationResult = "Error: \(error.localizedDescription)"
         }
     }
     
-    // MARK: - Classify image
-    func classifyImage(_ image: UIImage) {
-        guard let model = try? VNCoreMLModel(for: MobileNet().model) else {
-            classificationResult = "Failed to load model"
+    // MARK: - Fetch Green Score
+    func fetchGreenScore(for barcode: String) {
+        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json?fields=ecoscore_grade") else {
+            greenScoreResult = "Invalid barcode"
             return
         }
         
-        let request = VNCoreMLRequest(model: model) { request, error in
-            if let results = request.results as? [VNClassificationObservation],
-               let topResult = results.first {
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            guard let data = data else {
                 DispatchQueue.main.async {
-                    classificationResult = "\(topResult.identifier) - \(Int(topResult.confidence * 100))% confident"
+                    greenScoreResult = "No data from server"
+                }
+                return
+            }
+            
+            struct Product: Codable { let ecoscore_grade: String? }
+            struct Response: Codable { let product: Product? }
+            
+            if let decoded = try? JSONDecoder().decode(Response.self, from: data) {
+                DispatchQueue.main.async {
+                    greenScoreResult = decoded.product?.ecoscore_grade?.uppercased() ?? "Unknown"
+                }
+            } else {
+                DispatchQueue.main.async {
+                    greenScoreResult = "Error decoding data"
                 }
             }
-        }
-        
-        guard let ciImage = CIImage(image: image) else { return }
-        let handler = VNImageRequestHandler(ciImage: ciImage)
-        try? handler.perform([request])
+        }.resume()
     }
 }
 
-// MARK: - UIKit Camera Picker for SwiftUI
-struct ImagePicker: UIViewControllerRepresentable {
-    var sourceType: UIImagePickerController.SourceType
-    var onImagePicked: (UIImage) -> Void
+// MARK: - Barcode Scanner
+struct BarcodeScannerView: UIViewControllerRepresentable {
+    var onBarcodeScanned: (String) -> Void
     
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = sourceType
-        picker.delegate = context.coordinator
-        return picker
+    func makeUIViewController(context: Context) -> ScannerViewController {
+        let vc = ScannerViewController()
+        vc.onBarcodeScanned = onBarcodeScanned
+        return vc
     }
     
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    func updateUIViewController(_ uiViewController: ScannerViewController, context: Context) {}
+}
+
+class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
+    var captureSession: AVCaptureSession!
+    var previewLayer: AVCaptureVideoPreviewLayer!
+    var onBarcodeScanned: ((String) -> Void)?
     
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onImagePicked: onImagePicked)
-    }
-    
-    class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        var onImagePicked: (UIImage) -> Void
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .black
         
-        init(onImagePicked: @escaping (UIImage) -> Void) {
-            self.onImagePicked = onImagePicked
+        captureSession = AVCaptureSession()
+        guard let videoCaptureDevice = AVCaptureDevice.default(for: .video),
+              let videoInput = try? AVCaptureDeviceInput(device: videoCaptureDevice),
+              captureSession.canAddInput(videoInput) else { return }
+        captureSession.addInput(videoInput)
+        
+        let metadataOutput = AVCaptureMetadataOutput()
+        if captureSession.canAddOutput(metadataOutput) {
+            captureSession.addOutput(metadataOutput)
+            metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+            metadataOutput.metadataObjectTypes = [.ean8, .ean13, .upce, .code128, .code39, .code93, .qr]
         }
         
-        func imagePickerController(_ picker: UIImagePickerController,
-                                   didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                onImagePicked(image)
+        previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+        previewLayer.frame = view.layer.bounds
+        previewLayer.videoGravity = .resizeAspectFill
+        view.layer.addSublayer(previewLayer)
+        
+        captureSession.startRunning()
+    }
+    
+    func metadataOutput(_ output: AVCaptureMetadataOutput,
+                        didOutput metadataObjects: [AVMetadataObject],
+                        from connection: AVCaptureConnection) {
+        if let metadataObject = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+           let code = metadataObject.stringValue {
+            captureSession.stopRunning()
+            dismiss(animated: true) {
+                self.onBarcodeScanned?(code)
             }
-            picker.dismiss(animated: true)
         }
-        
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            picker.dismiss(animated: true)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if captureSession.isRunning {
+            captureSession.stopRunning()
         }
     }
 }
