@@ -8,13 +8,13 @@ struct ContentView: View {
     @State private var classificationResult: String = "No image classified yet"
     @State private var showPhotoPicker = false
     @State private var showCamera = false
-    @State private var photoItem: PhotosPickerItem? // for PhotosPicker binding
+    @State private var photoItem: PhotosPickerItem? // @state combines the internal stuff with the view
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 20) { //20 pixels spacing around the stack, Everyhing in the vstack stacks horizontallly
             
-            // Display selected image
-            if let selectedImage {
+            //display the img
+            if let selectedImage { //if let is a safe way to bind optional values. if somehow there is no pic taken then it will not cause an error basically (IF the image is there LET it show)
                 Image(uiImage: selectedImage)
                     .resizable()
                     .scaledToFit()
@@ -57,7 +57,7 @@ struct ContentView: View {
         .padding()
     }
     
-    // MARK: - Load image from PhotosPicker
+    
     func loadImageFromPicker() {
         Task {
             if let data = try? await photoItem?.loadTransferable(type: Data.self),
