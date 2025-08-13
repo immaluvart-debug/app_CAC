@@ -61,7 +61,7 @@ struct ContentView: View {
                 }
                 .font(.headline)
                 .padding()
-                .background(Color.green)
+                .background(Color.pink)
                 .foregroundColor(.white)
                 .clipShape(Capsule())
             }
