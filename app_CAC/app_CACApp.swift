@@ -11,7 +11,7 @@ import SwiftUI
 struct app_CACApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            WelcomeView()
         }
     }
 }

@@ -3,7 +3,38 @@ import AVFoundation
 import Vision
 import CoreML
 import PhotosUI
-
+struct WelcomeView: View {
+    @State private var isStarted = false
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 40) {
+                Text("Welcome")
+                    .font(.largeTitle)
+                    .multilineTextAlignment(.center)
+                    .padding()
+                
+                Text("Scan foods or classify images to see their environmental impact!")
+                    .font(.headline)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                
+                NavigationLink(destination: ContentView(), isActive: $isStarted) {
+                    Button("Start") {
+                        isStarted = true
+                    }
+                    .font(.headline)
+                    .padding()
+                    .background(Color.green)
+                    .foregroundColor(.white)
+                    .clipShape(Capsule())
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(.systemBackground))
+        }
+    }
+}
 struct ContentView: View {
     @State private var selectedImage: UIImage?
     @State private var classificationResult: String = "No image classified yet"
