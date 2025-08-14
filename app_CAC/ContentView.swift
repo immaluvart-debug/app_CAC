@@ -3,23 +3,77 @@ import AVFoundation
 import Vision
 import CoreML
 import PhotosUI
+
+
+/* This is the pseudo code:
+ 
+ App {
+     @State var userName
+     @State var userGoals
+     @State var favoritesList
+     @State var recentScans
+
+     // First Screen
+     LoginView()  // enter name, basic info
+         -> AddInfoView()  // extra user info, such as allegerns and stuff
+         -> GoalsView()  // choose goals (maybe a list of goals can pop up), they can choose multiple or just one.
+
+     // Main Navigation
+     TabView {
+         HomeView() // dashboard with quick links, under the dashboard could be recent scans.
+            
+         BarcodeScannerView()
+             // scan barcode, show nutritional value and green score in two different tabs??
+             // add to recentScans
+
+         RecommendationsView()
+             // search food items, get nutritional + green suggestions to replace or add
+            // this takes your goals into consideration
+             //can favorite these items
+
+         FavoritesView()
+             // list of liked/favorited items, link to recommendations page possibly
+
+         SettingsView()
+             // edit/add name, goals, preferences, allergens
+     }
+ }
+
+ // Example HomeView Layout
+ HomeView {
+     ShowWelcomeMessage(userName)
+     ShowRecentScans()
+     ShowRecommendedItems(favoritesList)
+ }
+ 
+        //future ideas:
+            Could integrate an ai model where the user can type in stuff they dont like (such as coconut) and the recommendation page will not suggest anything with coconut in it.
+            If the data is there, could say "you can save X carbon emissions if you buy this" which would show more impact
+            Could have a "Like this? here are some similar items" When a user favorites an item this can pop up possibly.
+ */
+
+import SwiftUI
+import AVFoundation
+import PhotosUI
+
+// MARK: - Welcome Screen
 struct WelcomeView: View {
     @State private var isStarted = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 40) {
-                Text("Welcome")
+                Text("Welcome to Leaf & Fork")
                     .font(.largeTitle)
                     .multilineTextAlignment(.center)
                     .padding()
                 
-                Text("Scan foods or classify images to see their environmental impact!")
+                Text("Scan foods to see their nutritional value and environmental impact!")
                     .font(.headline)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
                 
-                NavigationLink(destination: ContentView(), isActive: $isStarted) {
+                NavigationLink(destination: HomeView(), isActive: $isStarted) {
                     Button("Start") {
                         isStarted = true
                     }
@@ -35,59 +89,16 @@ struct WelcomeView: View {
         }
     }
 }
-struct ContentView: View {
-    @State private var selectedImage: UIImage?
-    @State private var classificationResult: String = "No image classified yet"
-    @State private var greenScoreResult: String = ""
+
+// MARK: - Home Screen
+struct HomeView: View {
     @State private var isShowingScanner = false
-    @State private var photoItem: PhotosPickerItem? = nil
+    @State private var scannedBarcode: String?
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 25) {
-                // Display selected image
-                if let selectedImage {
-                    Image(uiImage: selectedImage)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxHeight: 250)
-                        .cornerRadius(12)
-                }
-                
-                // Classification result
-                Text(classificationResult)
-                    .font(.headline)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.gray.opacity(0.15))
-                    .cornerRadius(8)
-                
-                // Green Score result
-                if !greenScoreResult.isEmpty {
-                    Text("Green Score: \(greenScoreResult)")
-                        .font(.title2)
-                        .foregroundColor(.green)
-                        .padding()
-                }
-                
-                // Buttons
-                PhotosPicker("Classify Image", selection: $photoItem, matching: .images)
-                    .font(.headline)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .clipShape(Capsule())
-                    .onChange(of: photoItem) { newItem in
-                        Task {
-                            if let data = try? await newItem?.loadTransferable(type: Data.self),
-                               let uiImage = UIImage(data: data) {
-                                selectedImage = uiImage
-                                classifyImage(uiImage)
-                            }
-                        }
-                    }
-                
-                Button("Scan Barcode for Green Score") {
+        NavigationStack {
+            VStack(spacing: 20) {
+                Button("Scan now") {
                     isShowingScanner = true
                 }
                 .font(.headline)
@@ -95,40 +106,116 @@ struct ContentView: View {
                 .background(Color.purple)
                 .foregroundColor(.white)
                 .clipShape(Capsule())
+                
+                NavigationLink(
+                    destination: ResultsView(barcode: scannedBarcode),
+                    isActive: Binding(
+                        get: { scannedBarcode != nil },
+                        set: { _ in }
+                    )
+                ) { EmptyView() }
             }
-            .padding()
-            .navigationTitle("Food Scanner")
             .sheet(isPresented: $isShowingScanner) {
                 BarcodeScannerView { barcode in
                     isShowingScanner = false
-                    fetchGreenScore(for: barcode)
+                    scannedBarcode = barcode
                 }
             }
         }
     }
+}
+
+// MARK: - Results Screen
+struct ResultsView: View {
+    var barcode: String? = nil
     
-    // MARK: - Classification
-    func classifyImage(_ image: UIImage) {
-        guard let ciImage = CIImage(image: image) else { return }
-        do {
-            let model = try VNCoreMLModel(for: MobileNet().model) // <-- Your model
-            let request = VNCoreMLRequest(model: model) { request, _ in
-                if let result = request.results?.first as? VNClassificationObservation {
-                    DispatchQueue.main.async {
-                        classificationResult = "\(result.identifier) (\(String(format: "%.1f", result.confidence * 100))%)"
+    // Product info
+    @State private var productName: String = ""
+    @State private var productImageURL: String = ""
+    @State private var greenScoreResult: String = ""
+    @State private var nutritionInfo: String = ""
+    
+    @State private var isShowingScanner = false
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 25) {
+                    
+                    // Product image
+                    if let url = URL(string: productImageURL), !productImageURL.isEmpty {
+                        AsyncImage(url: url) { image in
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 200)
+                                .cornerRadius(12)
+                        } placeholder: {
+                            ProgressView()
+                        }
                     }
+                    
+                    // Product name
+                    if !productName.isEmpty {
+                        Text(productName)
+                            .font(.title2)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Nutritional info
+                    if !nutritionInfo.isEmpty {
+                        Text("Nutritional Info:")
+                            .font(.headline)
+                        Text(nutritionInfo)
+                            .padding()
+                            .multilineTextAlignment(.center)
+                            .background(Color.gray.opacity(0.15))
+                            .cornerRadius(8)
+                    }
+                    
+                    // Green Score result
+                    if !greenScoreResult.isEmpty {
+                        Text("Green Score: \(greenScoreResult)")
+                            .font(.title2)
+                            .foregroundColor(.green)
+                            .padding()
+                    }
+                    
+                    // Button to scan another barcode
+                    Button("Scan Another Barcode") {
+                        isShowingScanner = true
+                    }
+                    .font(.headline)
+                    .padding()
+                    .background(Color.purple)
+                    .foregroundColor(.white)
+                    .clipShape(Capsule())
+                }
+                .padding()
+            }
+            .navigationTitle("Food Scanner")
+            .onAppear {
+                if let code = barcode {
+                    fetchProductInfo(for: code)
                 }
             }
-            try VNImageRequestHandler(ciImage: ciImage).perform([request])
-        } catch {
-            classificationResult = "Error: \(error.localizedDescription)"
+            .sheet(isPresented: $isShowingScanner) {
+                BarcodeScannerView { barcode in
+                    isShowingScanner = false
+                    fetchProductInfo(for: barcode)
+                }
+            }
         }
     }
     
-    // MARK: - Fetch Green Score
-    func fetchGreenScore(for barcode: String) {
-        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json?fields=ecoscore_grade") else {
+    // MARK: - Fetch Product Info (Name + Image + Nutrition + Green Score)
+    func fetchProductInfo(for barcode: String) {
+        guard let url = URL(string:
+            "https://world.openfoodfacts.org/api/v0/product/\(barcode).json?fields=product_name,image_url,ecoscore_grade,nutriments"
+        ) else {
             greenScoreResult = "Invalid barcode"
+            nutritionInfo = ""
             return
         }
         
@@ -136,20 +223,50 @@ struct ContentView: View {
             guard let data = data else {
                 DispatchQueue.main.async {
                     greenScoreResult = "No data from server"
+                    nutritionInfo = ""
                 }
                 return
             }
             
-            struct Product: Codable { let ecoscore_grade: String? }
+            struct Nutriments: Codable {
+                let energy_kcal_100g: Double?
+                let fat_100g: Double?
+                let saturated_fat_100g: Double?
+                let sugars_100g: Double?
+                let proteins_100g: Double?
+            }
+            struct Product: Codable {
+                let product_name: String?
+                let image_url: String?
+                let ecoscore_grade: String?
+                let nutriments: Nutriments?
+            }
             struct Response: Codable { let product: Product? }
             
             if let decoded = try? JSONDecoder().decode(Response.self, from: data) {
                 DispatchQueue.main.async {
+                    productName = decoded.product?.product_name ?? "Unknown Product"
+                    productImageURL = decoded.product?.image_url ?? ""
                     greenScoreResult = decoded.product?.ecoscore_grade?.uppercased() ?? "Unknown"
+                    
+                    if let n = decoded.product?.nutriments {
+                        nutritionInfo = """
+                        Energy: \(n.energy_kcal_100g ?? 0) kcal / 100g
+                        Fat: \(n.fat_100g ?? 0) g
+                        Saturated Fat: \(n.saturated_fat_100g ?? 0) g
+                        Sugars: \(n.sugars_100g ?? 0) g
+                        Protein: \(n.proteins_100g ?? 0) g
+                        """
+                    } else {
+                        nutritionInfo = "No nutritional info available"
+                    }
                 }
             } else {
                 DispatchQueue.main.async {
                     greenScoreResult = "Error decoding data"
+                    nutritionInfo = ""
+                    productName = ""
+                    productImageURL = ""
                 }
             }
         }.resume()
