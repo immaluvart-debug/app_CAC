@@ -90,7 +90,7 @@ struct WelcomeView: View {
     }
 }
 
-// MARK: - Home Screen
+
 struct HomeView: View {
     @State private var isShowingScanner = false
     @State private var scannedBarcode: String?
@@ -277,13 +277,29 @@ struct ResultsView: View {
 struct BarcodeScannerView: UIViewControllerRepresentable {
     var onBarcodeScanned: (String) -> Void
     
-    func makeUIViewController(context: Context) -> ScannerViewController {
+    func makeUIViewController(context: Context) -> UIViewController {
+        #if DEBUG
+        // Show placeholder in Xcode Canvas preview
+        if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
+            let placeholder = UIHostingController(rootView:
+                ZStack {
+                    Color.gray.opacity(0.3)
+                    Text("Camera preview here")
+                        .foregroundColor(.black)
+                        .font(.headline)
+                }
+            )
+            return placeholder
+        }
+        #endif
+        
+        // Real scanner at runtime
         let vc = ScannerViewController()
         vc.onBarcodeScanned = onBarcodeScanned
         return vc
     }
     
-    func updateUIViewController(_ uiViewController: ScannerViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
 
 class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
@@ -333,5 +349,19 @@ class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDel
         if captureSession.isRunning {
             captureSession.stopRunning()
         }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView_PreviewMode()
+    }
+}
+
+// This is a PREVIEW-ONLY version of ContentView
+struct ContentView_PreviewMode: View {
+
+    var body: some View {
+       //add the ui/ux all in here to test out how it looks.
     }
 }
