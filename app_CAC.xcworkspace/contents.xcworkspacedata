@@ -5,9 +5,6 @@
       location = "group:app_CAC.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:BarcodeScannerView.swift">
-   </FileRef>
-   <FileRef
       location = "group:Pods/Pods.xcodeproj">
    </FileRef>
 </Workspace>
