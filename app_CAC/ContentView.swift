@@ -5,6 +5,7 @@ import CoreML
 import PhotosUI
 
 struct ContentView: View {
+    
     @State private var selectedImage: UIImage?
     @State private var classificationResult: String = "No image classified yet"
     @State private var greenScoreResult: String = ""
@@ -135,6 +136,8 @@ struct ContentView: View {
                 }
             }
         }
+     
+    
     }
 
     // MARK: - Classification
@@ -294,6 +297,114 @@ struct ContentView: View {
 
 //MARK: - WelcomeView
 struct WelcomeView: View {
+    @State private var isLogin = true
+       @State private var username = ""
+       @State private var password = ""
+       @State private var goNext = false   // navigation trigger
+       
+       var body: some View {
+           NavigationStack {
+               ZStack {
+                   Color("ourgreen")
+                       .ignoresSafeArea()
+                   VStack(spacing: 20) {
+                       Image("app_CAC icon")
+                           .resizable()
+                           .frame(width: 175, height: 175)
+                       Text("welcome") .font(.custom("DollieScript_PersonalUse", size: 48))
+                           .italic() .foregroundStyle(Color(.white))
+                       Spacer().frame(height: 30)
+                       
+                       ZStack {
+                           RoundedRectangle(cornerRadius: 20)
+                               .fill(Color("lightestgreen"))
+                               .frame(width: 345, height: 420)
+                        
+                           VStack(spacing: 14) {
+                        
+                               HStack(spacing: 16) {
+                                   Button(action: {
+                                       isLogin = true
+                                       username = ""
+                                       password = ""
+                                   }) {
+                                       Text("LOG IN")
+                                           .font(.headline)
+                                           .foregroundColor(.white)
+                                           .padding(.vertical, 15)
+                                           .padding(.horizontal, 20)
+                                           .background(Color("light_grey"))
+                                   }
+                                   Button(action: {
+                                       isLogin = false
+                                       username = ""
+                                       password = "" }) {
+                                           Text("SIGN UP")
+                                               .font(.headline)
+                                               .foregroundColor(.white)
+                                               .padding(.vertical, 15)
+                                               .padding(.horizontal, 20)
+                                               .background(Color("light_grey"))
+                                       }
+                               } // Dark rectangle content
+                         
+                               ZStack {
+                              
+                                   Rectangle()
+                             
+                                       .fill(Color("light_grey"))
+                                       .frame(width: 280, height: 260)
+                                   VStack(alignment: .leading, spacing: 12) {
+                                 
+                                           if isLogin {
+                                               
+                                               Text("enter username:")
+                                                   .foregroundColor(.white)
+                                               TextField("", text: $username)
+                                                   .textFieldStyle(RoundedBorderTextFieldStyle())
+                                               
+                                                   .frame(width: 250)
+                                               Text("enter password:")
+                                                   .foregroundColor(.white)
+                                               SecureField("", text: $password)
+                                                   .textFieldStyle(RoundedBorderTextFieldStyle()) .frame(width: 250)
+                                               NavigationLink(destination: ContentView(), isActive: $goNext) {
+                                                   Button(action: { goNext = true; }) {
+                                                       Text("OK")
+                                                           .font(.headline)
+                                                           .foregroundColor(.white)
+                                                           .padding()
+                                                           .frame(width: 100)
+                                                           .background(Color("grey"))
+                                                       .cornerRadius(8) }
+                                               }
+                                           } else {
+                                               Text("create username:")
+                                               .foregroundColor(.white)
+                                               TextField("", text: $username)
+                                               .textFieldStyle(RoundedBorderTextFieldStyle())
+                                               .frame(width: 250)
+                                               Text("create password:")
+                                               .foregroundColor(.white)
+                                               SecureField("", text: $password)
+                                               .textFieldStyle(RoundedBorderTextFieldStyle())
+                                               .frame(width: 250)
+                                               NavigationLink(destination: PreferencesView(), isActive: $goNext) {
+                                                   
+                                                   Button(action: {
+                                                       goNext = true })
+                                                   {
+                                                       Text("OK")
+                                                       .font(.headline)
+                                                       .foregroundColor(.white)
+                                                       .padding() .frame(width: 100)
+                                                       .background(Color("grey"))
+                                                       .cornerRadius(8) } } } }
+                                   .padding() } } } }
+                   .padding() } } } }
+       
+    
+    /*
     var body: some View {
         NavigationView {
             VStack(spacing: 30) {
@@ -349,6 +460,10 @@ struct WelcomeView: View {
             .navigationBarHidden(true)
         }
     }
+     */
+    
+#Preview {
+    WelcomeView()
 }
 
 //MARK: - Create Account
