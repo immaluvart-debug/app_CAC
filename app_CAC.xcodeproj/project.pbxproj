@@ -33,6 +33,7 @@
 		21D36B232E56CDA2006A4434 /* Exceptions for "app_CAC" folder in "app_CACTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Fonts/Allura-Regular.ttf",
 				"Fonts/Quicksand-Regular.ttf",
 			);
 			target = 4B2934522E4AF4A400927095 /* app_CACTests */;
@@ -40,6 +41,7 @@
 		21D36B242E56CDA2006A4434 /* Exceptions for "app_CAC" folder in "app_CACUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				"Fonts/Allura-Regular.ttf",
 				"Fonts/Quicksand-Regular.ttf",
 			);
 			target = 4B29345C2E4AF4A400927095 /* app_CACUITests */;
@@ -410,7 +412,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8TNQ3V38UM;
+				DEVELOPMENT_TEAM = QSMG8QKZCT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "app-CAC-Info.plist";
@@ -442,7 +444,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 8TNQ3V38UM;
+				DEVELOPMENT_TEAM = QSMG8QKZCT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "app-CAC-Info.plist";

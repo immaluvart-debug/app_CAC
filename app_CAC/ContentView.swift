@@ -311,13 +311,12 @@ struct WelcomeView: View {
                        Image("app_CAC icon")
                            .resizable()
                            .frame(width: 175, height: 175)
-                       Text("welcome") .font(.custom("DollieScript_PersonalUse", size: 48))
-                           .italic() .foregroundStyle(Color(.white))
-                       Spacer().frame(height: 30)
+                       Text("welcome") .font(.custom("Allura-Regular", size: 70))
+                           .foregroundStyle(Color(.white))
                        
                        ZStack {
                            RoundedRectangle(cornerRadius: 20)
-                               .fill(Color("lightestgreen"))
+                               .fill(Color.lightestgreen)
                                .frame(width: 345, height: 420)
                         
                            VStack(spacing: 14) {
