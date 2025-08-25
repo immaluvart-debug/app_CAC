@@ -302,105 +302,111 @@ struct WelcomeView: View {
        @State private var password = ""
        @State private var goNext = false   // navigation trigger
        
-       var body: some View {
-           NavigationStack {
-               ZStack {
-                   Color("ourgreen")
-                       .ignoresSafeArea()
-                   VStack(spacing: 20) {
-                       Image("app_CAC icon")
-                           .resizable()
-                           .frame(width: 175, height: 175)
-                       Text("welcome") .font(.custom("Allura-Regular", size: 70))
-                           .foregroundStyle(Color(.white))
-                       
-                       ZStack {
-                           RoundedRectangle(cornerRadius: 20)
-                               .fill(Color.lightestgreen)
-                               .frame(width: 345, height: 420)
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Color.ourgreen.ignoresSafeArea()
+                VStack(spacing: 20) {
+                    Image("app_CAC icon")
+                        .resizable()
+                        .frame(width: 175, height: 175)
+                    Text("welcome") .font(.custom("Allura-Regular", size: 70))
+                        .foregroundStyle(Color(.white))
+                    
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.lightestgreen)
+                            .frame(width: 345, height: 420)
                         
-                           VStack(spacing: 14) {
-                        
-                               HStack(spacing: 16) {
-                                   Button(action: {
-                                       isLogin = true
-                                       username = ""
-                                       password = ""
-                                   }) {
-                                       Text("LOG IN")
-                                           .font(.headline)
-                                           .foregroundColor(.white)
-                                           .padding(.vertical, 15)
-                                           .padding(.horizontal, 20)
-                                           .background(Color("light_grey"))
-                                   }
-                                   Button(action: {
-                                       isLogin = false
-                                       username = ""
-                                       password = "" }) {
-                                           Text("SIGN UP")
-                                               .font(.headline)
-                                               .foregroundColor(.white)
-                                               .padding(.vertical, 15)
-                                               .padding(.horizontal, 20)
-                                               .background(Color("light_grey"))
-                                       }
-                               } // Dark rectangle content
-                         
-                               ZStack {
-                              
-                                   Rectangle()
-                             
-                                       .fill(Color("light_grey"))
-                                       .frame(width: 280, height: 260)
-                                   VStack(alignment: .leading, spacing: 12) {
-                                 
-                                           if isLogin {
-                                               
-                                               Text("enter username:")
-                                                   .foregroundColor(.white)
-                                               TextField("", text: $username)
-                                                   .textFieldStyle(RoundedBorderTextFieldStyle())
-                                               
-                                                   .frame(width: 250)
-                                               Text("enter password:")
-                                                   .foregroundColor(.white)
-                                               SecureField("", text: $password)
-                                                   .textFieldStyle(RoundedBorderTextFieldStyle()) .frame(width: 250)
-                                               NavigationLink(destination: ContentView(), isActive: $goNext) {
-                                                   Button(action: { goNext = true; }) {
-                                                       Text("OK")
-                                                           .font(.headline)
-                                                           .foregroundColor(.white)
-                                                           .padding()
-                                                           .frame(width: 100)
-                                                           .background(Color("grey"))
-                                                       .cornerRadius(8) }
-                                               }
-                                           } else {
-                                               Text("create username:")
-                                               .foregroundColor(.white)
-                                               TextField("", text: $username)
-                                               .textFieldStyle(RoundedBorderTextFieldStyle())
-                                               .frame(width: 250)
-                                               Text("create password:")
-                                               .foregroundColor(.white)
-                                               SecureField("", text: $password)
-                                               .textFieldStyle(RoundedBorderTextFieldStyle())
-                                               .frame(width: 250)
-                                               NavigationLink(destination: PreferencesView(), isActive: $goNext) {
-                                                   
-                                                   Button(action: {
-                                                       goNext = true })
-                                                   {
-                                                       Text("OK")
-                                                       .font(.headline)
-                                                       .foregroundColor(.white)
-                                                       .padding() .frame(width: 100)
-                                                       .background(Color("grey"))
-                                                       .cornerRadius(8) } } } }
-                                   .padding() } } } }
-                   .padding() } } } }
+                        VStack(spacing: 14) {
+                            
+                            HStack(spacing: 16) {
+                                Button(action: {
+                                    isLogin = true
+                                    username = ""
+                                    password = ""
+                                }) {
+                                    Text("LOG IN")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding(.vertical, 15)
+                                        .padding(.horizontal, 20)
+                                        .background(Color("light_grey"))
+                                }
+                                Button(action: {
+                                    isLogin = false
+                                    username = ""
+                                    password = "" }) {
+                                        Text("SIGN UP")
+                                            .font(.headline)
+                                            .foregroundColor(.white)
+                                            .padding(.vertical, 15)
+                                            .padding(.horizontal, 20)
+                                            .background(Color("light_grey"))
+                                    }
+                            } // Dark rectangle content
+                            
+                            ZStack {
+                                
+                                Rectangle()
+                                
+                                    .fill(Color("light_grey"))
+                                    .frame(width: 280, height: 260)
+                                VStack(alignment: .leading, spacing: 12) {
+                                    
+                                    if isLogin {
+                                        
+                                        Text("enter username:")
+                                            .foregroundColor(.white)
+                                        TextField("", text: $username)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                                        
+                                            .frame(width: 250)
+                                        Text("enter password:")
+                                            .foregroundColor(.white)
+                                        SecureField("", text: $password)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle()) .frame(width: 250)
+                                        NavigationLink(destination: HomeView(), isActive: $goNext) {
+                                            Button(action: { goNext = true; }) {
+                                                Text("OK")
+                                                    .font(.headline)
+                                                    .foregroundColor(.white)
+                                                    .padding()
+                                                    .frame(width: 100)
+                                                    .background(Color("grey"))
+                                                .cornerRadius(8) }
+                                        }
+                                    } else {
+                                        Text("create username:")
+                                            .foregroundColor(.white)
+                                        TextField("", text: $username)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                                            .frame(width: 250)
+                                        Text("create password:")
+                                            .foregroundColor(.white)
+                                        SecureField("", text: $password)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                                            .frame(width: 250)
+                                        NavigationLink(destination: PreferencesView(), isActive: $goNext) {
+                                            
+                                            Button(action: {
+                                                goNext = true })
+                                            {
+                                                Text("OK")
+                                                    .font(.headline)
+                                                    .foregroundColor(.white)
+                                                    .padding() .frame(width: 100)
+                                                    .background(Color("grey"))
+                                                .cornerRadius(8) } } } }
+                                .padding() } } } }
+                .padding()
+            }
+            
+        }
+        .ignoresSafeArea()
+        .statusBarHidden(true)
+    } }
+    
        
     
     /*
@@ -461,9 +467,7 @@ struct WelcomeView: View {
     }
      */
     
-#Preview {
-    WelcomeView()
-}
+
 
 //MARK: - Create Account
 struct CreateAccountView: View {
@@ -785,7 +789,7 @@ struct GoalsView: View {
                 .padding(.bottom, 20)
                 
                 // Navigation to ContentView
-                NavigationLink(destination: ContentView(), isActive: $navigateToContent) {
+                NavigationLink(destination: HomeView(), isActive: $navigateToContent) {
                     EmptyView()
                 }
             }
@@ -805,6 +809,15 @@ struct GoalsView: View {
     private func saveGoals() {
         let goalsArray = Array(selectedGoals)
         UserDefaults.standard.set(goalsArray, forKey: "userGoals")
+    }
+}
+
+struct FillerView: View {
+    var body: some View {
+        ZStack{
+            Color("grey")
+                .ignoresSafeArea()
+        }
     }
 }
 
@@ -838,5 +851,192 @@ struct GoalRow: View {
     }
 }
 
+struct HomeView: View {
+    var body: some View {
+        NavigationView {
+            ZStack {
+                // Background color
+                Color("ourgreen")
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 20) {
+                    
+                    // MARK: - Top Section (Centered Logo + Right Icons)
+                    ZStack {
+                        // Centered Logo
+                        Image("app_CAC icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 150, height: 150)
+                            .padding(.top, 0)
+                        
+                        HStack {
+                            Spacer()
+                            VStack {
+                                // Settings Gear
+                                Image(systemName: "gearshape")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 40, height: 40)
+                                    .padding(.top, 10)
+                                
+                                Spacer()
+                                
+                                // Heart Icon
+                                Image("heart_icon")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 50, height: 50)
+                                    .padding(.bottom, 0)
+                            }
+                            .padding(.trailing, 15)
+                        }
+                    }
+                    
+                    // MARK: - Recommended & Near Me Buttons
+                    HStack(spacing: 0) {
+                        NavigationLink(destination: FillerView()) {
+                            Text("RECOMMENDED")
+                                .font(.custom("BebasNeue-Regular", size: 30))
+                                .frame(width:172)
+                                .padding(.vertical, 5)
+                                .foregroundColor(.white)
+                                .background(Color("grey"))
+                        }
+                        
+                        
+                        NavigationLink(destination: FillerView()) {
+                            Text("NEAR ME")
+                                .font(.custom("BebasNeue-Regular", size: 30))
+                                .frame(width:172)
+                                .padding(.vertical, 5)
+                                .foregroundColor(.white)
+                                .background(Color("grey"))
+                        }
+                    }
+                    .cornerRadius(5)
+                    
+                    // MARK: - Recent Scans Section
+                    VStack(alignment: .leading, spacing: 10) {
+                        
+                        // Light green box with ScrollView INSIDE
+                        VStack(alignment: .leading) {
+                            // Align the title fully to the left
+                            HStack {
+                                Text("Recent Scans")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .padding(.top, 15)
+                                Spacer()
+                            }
+                            .padding(.leading, 15)
+                            
+                            ScrollView {
+                                VStack(spacing: 20) {
+                                    // First scan item (green)
+                                    scanItem(
+                                        imageName: "imgPlaceholder",
+                                        title: "Doritos bits bbq",
+                                        energy: "x Cal",
+                                        fat: "29.0g",
+                                        yada: "6g",
+                                        sodium: "999mg",
+                                        other: "67j",
+                                        greenScore: 5,
+                                        borderColor: .green
+                                    )
+                                    
+                                    // Second scan item (red)
+                                    scanItem(
+                                        imageName: "imgPlaceholder",
+                                        title: "Flaming Hot Cheetos",
+                                        energy: "x Cal",
+                                        fat: "29.0g",
+                                        yada: "6g",
+                                        sodium: "999mg",
+                                        other: "67j",
+                                        greenScore: 4,
+                                        borderColor: .red
+                                    )
+                                }
+                                .padding(.horizontal, 15) // ✅ Adds spacing on left & right inside light grey box
+                                   .padding(.top, 5)        // ✅ Extra breathing room at the top
+                                   .padding(.bottom, 15)  
+                            }
+                        }
+                        .background(Color("lightestgreen"))
+                        .cornerRadius(10)
+                        .padding(.horizontal, 10)
+                        .frame(height: 350)
+                    }
+                    
+                    // MARK: - Scan Button
+                    NavigationLink(destination: ContentView()) {
+                        Text("SCAN")
+                            .font(.custom("BebasNeue-Regular", size: 30))
+                            .frame(width: 150, height: 60)
+                            .foregroundColor(.white)
+                            .background(Color("grey"))
+                            .cornerRadius(10)
+                    }
+                    .padding(.top, 10)
+                }
+                .padding()
+            }
+            .navigationBarHidden(true)
+        }
+    }
+    
+    // MARK: - Scan Item View
+    func scanItem(imageName: String, title: String, energy: String, fat: String, yada: String, sodium: String, other: String, greenScore: Int, borderColor: Color) -> some View {
+        VStack(spacing: 0) { // ✅ Removed spacing so score touches the grey box
+            VStack {
+            
+                HStack(spacing: 15) {
+                    
+                    // Product image placeholder
+                    Image(imageName)
+                        .resizable()
+                        .frame(width: 60, height: 60)
+                        .background(Color.white)
+                        .cornerRadius(5)
+                    
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(title)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        Text("energy: \(energy)")
+                        Text("Fat: \(fat)")
+                        Text("yada: \(yada)")
+                        Text("baaaaaa: \(sodium)")
+                        Text("hehehe: \(other)")
+                    }
+                    .foregroundColor(.white)
+                    
+                    Spacer()
+                }
+                .padding()
+                .background(Color("grey"))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 15)
+                        .stroke(borderColor, lineWidth: 4)
+                )
+                .cornerRadius(15)
+                .frame(width: 320) // ✅ Narrower width so it doesn't stretch fully
+            }
+            
+            // GREEN/RED Score Rectangle (now attached to the box)
+            Text("GREEN SCORE: \(greenScore)")
+                .font(.headline)
+                .frame(width: 320, height: 35)
+                .background(borderColor)
+                .cornerRadius(8)
+                .foregroundColor(.white)
+            //Spacer()
+        }
+    }
+}
 
-
+    #Preview {
+        HomeView()
+    }

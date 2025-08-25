@@ -34,6 +34,16 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"Fonts/Allura-Regular.ttf",
+				Fonts/bebas_neue/About.md,
+				Fonts/bebas_neue/About.txt,
+				"Fonts/bebas_neue/BebasNeue-Regular.eot",
+				"Fonts/bebas_neue/BebasNeue-Regular.otf",
+				"Fonts/bebas_neue/BebasNeue-Regular.ttf",
+				"Fonts/bebas_neue/BebasNeue-Regular.woff",
+				"Fonts/bebas_neue/BebasNeue-Regular.woff2",
+				"Fonts/bebas_neue/OFL-FAQ.txt",
+				Fonts/bebas_neue/OFL.txt,
+				Fonts/bebas_neue/Try_BebasNeuePro.txt,
 				"Fonts/Quicksand-Regular.ttf",
 			);
 			target = 4B2934522E4AF4A400927095 /* app_CACTests */;
@@ -42,6 +52,16 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"Fonts/Allura-Regular.ttf",
+				Fonts/bebas_neue/About.md,
+				Fonts/bebas_neue/About.txt,
+				"Fonts/bebas_neue/BebasNeue-Regular.eot",
+				"Fonts/bebas_neue/BebasNeue-Regular.otf",
+				"Fonts/bebas_neue/BebasNeue-Regular.ttf",
+				"Fonts/bebas_neue/BebasNeue-Regular.woff",
+				"Fonts/bebas_neue/BebasNeue-Regular.woff2",
+				"Fonts/bebas_neue/OFL-FAQ.txt",
+				Fonts/bebas_neue/OFL.txt,
+				Fonts/bebas_neue/Try_BebasNeuePro.txt,
 				"Fonts/Quicksand-Regular.ttf",
 			);
 			target = 4B29345C2E4AF4A400927095 /* app_CACUITests */;
@@ -412,7 +432,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = QSMG8QKZCT;
+				DEVELOPMENT_TEAM = 8TNQ3V38UM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "app-CAC-Info.plist";
@@ -444,7 +464,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = QSMG8QKZCT;
+				DEVELOPMENT_TEAM = 8TNQ3V38UM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "app-CAC-Info.plist";
