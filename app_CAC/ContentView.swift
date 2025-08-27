@@ -331,7 +331,7 @@ struct WelcomeView: View {
                                         .foregroundColor(.white)
                                         .padding(.vertical, 15)
                                         .padding(.horizontal, 20)
-                                        .background(Color("light_grey"))
+                                        .background(Color("darkestGrey"))
                                 }
                                 Button(action: {
                                     isLogin = false
@@ -342,7 +342,7 @@ struct WelcomeView: View {
                                             .foregroundColor(.white)
                                             .padding(.vertical, 15)
                                             .padding(.horizontal, 20)
-                                            .background(Color("light_grey"))
+                                            .background(Color("darkestGrey"))
                                     }
                             } // Dark rectangle content
                             
@@ -350,7 +350,7 @@ struct WelcomeView: View {
                                 
                                 Rectangle()
                                 
-                                    .fill(Color("light_grey"))
+                                    .fill(Color("darkestGrey"))
                                     .frame(width: 280, height: 260)
                                 VStack(alignment: .leading, spacing: 12) {
                                     
@@ -873,12 +873,15 @@ struct HomeView: View {
                         HStack {
                             Spacer()
                             VStack {
-                                // Settings Gear
-                                Image(systemName: "gearshape")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 40, height: 40)
-                                    .padding(.top, 10)
+                                // Settings Gear (navigation link)
+                                NavigationLink(destination: SettingsView()) {
+                                    Image(systemName: "gearshape")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 40, height: 40)
+                                        .padding(.top, 10)
+                                }
+                                .buttonStyle(PlainButtonStyle())
                                 
                                 Spacer()
                                 
@@ -892,23 +895,24 @@ struct HomeView: View {
                             .padding(.trailing, 15)
                         }
                     }
+                    .padding(.top, 20)
+                    .navigationBarHidden(true)
                     
-                    // MARK: - Recommended & Near Me Buttons
+                    // MARK: - RECOMMENDED / NEAR ME Buttons
                     HStack(spacing: 0) {
                         NavigationLink(destination: FillerView()) {
                             Text("RECOMMENDED")
                                 .font(.custom("BebasNeue-Regular", size: 30))
-                                .frame(width:172)
+                                .frame(width: 172)
                                 .padding(.vertical, 5)
                                 .foregroundColor(.white)
                                 .background(Color("grey"))
                         }
                         
-                        
                         NavigationLink(destination: FillerView()) {
                             Text("NEAR ME")
                                 .font(.custom("BebasNeue-Regular", size: 30))
-                                .frame(width:172)
+                                .frame(width: 172)
                                 .padding(.vertical, 5)
                                 .foregroundColor(.white)
                                 .background(Color("grey"))
@@ -919,9 +923,9 @@ struct HomeView: View {
                     // MARK: - Recent Scans Section
                     VStack(alignment: .leading, spacing: 10) {
                         
-                        // Light green box with ScrollView INSIDE
+                        
                         VStack(alignment: .leading) {
-                            // Align the title fully to the left
+                           
                             HStack {
                                 Text("Recent Scans")
                                     .font(.title2)
@@ -959,9 +963,9 @@ struct HomeView: View {
                                         borderColor: .red
                                     )
                                 }
-                                .padding(.horizontal, 15) // ✅ Adds spacing on left & right inside light grey box
-                                   .padding(.top, 5)        // ✅ Extra breathing room at the top
-                                   .padding(.bottom, 15)  
+                                .padding(.horizontal, 15)
+                                .padding(.top, 5)
+                                .padding(.bottom, 15)
                             }
                         }
                         .background(Color("lightestgreen"))
@@ -980,40 +984,57 @@ struct HomeView: View {
                             .cornerRadius(10)
                     }
                     .padding(.top, 10)
+                    
+                    Spacer()
                 }
-                .padding()
             }
-            .navigationBarHidden(true)
         }
     }
-    
-    // MARK: - Scan Item View
-    func scanItem(imageName: String, title: String, energy: String, fat: String, yada: String, sodium: String, other: String, greenScore: Int, borderColor: Color) -> some View {
-        VStack(spacing: 0) { // ✅ Removed spacing so score touches the grey box
-            VStack {
+}
+
+        // MARK: - Scan Item View
+        
+        func scanItem(
+            imageName: String,
+            title: String,
+            energy: String,
+            fat: String,
+            yada: String,
+            sodium: String,
+            other: String,
+            greenScore: Int,
+            borderColor: Color
+        ) -> some View {
             
-                HStack(spacing: 15) {
-                    
-                    // Product image placeholder
+            VStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 10) {
                     Image(imageName)
                         .resizable()
-                        .frame(width: 60, height: 60)
-                        .background(Color.white)
-                        .cornerRadius(5)
+                        .scaledToFit()
+                        .frame(height: 100)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(borderColor, lineWidth: 2))
                     
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(title)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        Text("energy: \(energy)")
+                    Text(title)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    HStack {
+                        Text("Energy: \(energy)")
+                        Spacer()
                         Text("Fat: \(fat)")
-                        Text("yada: \(yada)")
-                        Text("baaaaaa: \(sodium)")
-                        Text("hehehe: \(other)")
                     }
                     .foregroundColor(.white)
                     
-                    Spacer()
+                    HStack {
+                        Text("Yada: \(yada)")
+                        Spacer()
+                        Text("Sodium: \(sodium)")
+                    }
+                    .foregroundColor(.white)
+                    
+                    Text("Other: \(other)")
+                        .foregroundColor(.white)
                 }
                 .padding()
                 .background(Color("grey"))
@@ -1022,21 +1043,57 @@ struct HomeView: View {
                         .stroke(borderColor, lineWidth: 4)
                 )
                 .cornerRadius(15)
-                .frame(width: 320) // ✅ Narrower width so it doesn't stretch fully
+                .frame(width: 320)
+                
+                // GREEN/RED Score Rectangle (attached to the box)
+                Text("GREEN SCORE: \(greenScore)")
+                    .font(.headline)
+                    .frame(width: 320, height: 35)
+                    .background(borderColor)
+                    .cornerRadius(8)
+                    .foregroundColor(.white)
             }
+        }
+        
+        //MARK: - Settings
+struct SettingsView: View {
+    var body: some View {
+        ZStack {
+            Color("ourgreen")
+                .ignoresSafeArea()  // fills whole screen
             
-            // GREEN/RED Score Rectangle (now attached to the box)
-            Text("GREEN SCORE: \(greenScore)")
-                .font(.headline)
-                .frame(width: 320, height: 35)
-                .background(borderColor)
-                .cornerRadius(8)
-                .foregroundColor(.white)
-            //Spacer()
+            VStack(spacing: 20) {
+                NavigationLink(destination: PreferencesView()) {
+                    CustomButton(title: "Adjust Preferences and Goals")
+                }
+                CustomButton(title: "App Settings")
+                CustomButton(title: "Help")
+            }
+            .padding()
+            .navigationTitle("Settings")
         }
     }
 }
 
-    #Preview {
-        HomeView()
-    }
+        
+        struct CustomButton: View {
+            var title: String
+            
+            var body: some View {
+                Text(title)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color("darkestGrey"))
+                    .foregroundColor(.white)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 0)
+                            .stroke(Color.white, lineWidth: 2)
+                    )
+                    .cornerRadius(0)
+            }
+            
+        }
+    
+    
+    
+
