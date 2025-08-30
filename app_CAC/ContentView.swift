@@ -3,7 +3,10 @@ import AVFoundation
 import Vision
 import CoreML
 import PhotosUI
+import Foundation
+import FirebaseAuth
 
+// Mark: - ContentView
 struct ContentView: View {
     
     @State private var selectedImage: UIImage?
@@ -298,19 +301,26 @@ struct ContentView: View {
 //MARK: - WelcomeView
 struct WelcomeView: View {
     @State private var isLogin = true
-       @State private var username = ""
-       @State private var password = ""
-       @State private var goNext = false   // navigation trigger
-       
+    @State private var email = ""
+    @State private var password = ""
+    // navigation states
+    @State private var navigateToHome = false
+    @State private var navigateToPreferences = false
+    // ui states
+    @State private var errorMessage = ""
+    @State private var isLoading = false
+    
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.ourgreen.ignoresSafeArea()
+                
                 VStack(spacing: 20) {
                     Image("app_CAC icon")
                         .resizable()
                         .frame(width: 175, height: 175)
-                    Text("welcome") .font(.custom("Allura-Regular", size: 70))
+                    Text("welcome")
+                        .font(.custom("Allura-Regular", size: 70))
                         .foregroundStyle(Color(.white))
                     
                     ZStack {
@@ -319,13 +329,13 @@ struct WelcomeView: View {
                             .frame(width: 345, height: 420)
                         
                         VStack(spacing: 14) {
-                            
                             HStack(spacing: 16) {
-                                Button(action: {
+                                Button {
                                     isLogin = true
-                                    username = ""
+                                    email = ""
                                     password = ""
-                                }) {
+                                    errorMessage = ""
+                                } label: {
                                     Text("LOG IN")
                                         .font(.headline)
                                         .foregroundColor(.white)
@@ -333,79 +343,154 @@ struct WelcomeView: View {
                                         .padding(.horizontal, 20)
                                         .background(Color("darkestGrey"))
                                 }
-                                Button(action: {
+                                
+                                Button {
                                     isLogin = false
-                                    username = ""
-                                    password = "" }) {
-                                        Text("SIGN UP")
-                                            .font(.headline)
-                                            .foregroundColor(.white)
-                                            .padding(.vertical, 15)
-                                            .padding(.horizontal, 20)
-                                            .background(Color("darkestGrey"))
-                                    }
-                            } // Dark rectangle content
+                                    email = ""
+                                    password = ""
+                                    errorMessage = ""
+                                } label: {
+                                    Text("SIGN UP")
+                                        .font(.headline)
+                                        .foregroundColor(.white)
+                                        .padding(.vertical, 15)
+                                        .padding(.horizontal, 20)
+                                        .background(Color("darkestGrey"))
+                                }
+                            }
                             
                             ZStack {
-                                
                                 Rectangle()
-                                
                                     .fill(Color("darkestGrey"))
                                     .frame(width: 280, height: 260)
+                                
                                 VStack(alignment: .leading, spacing: 12) {
-                                    
                                     if isLogin {
-                                        
-                                        Text("enter username:")
+                                        Text("enter email:")
                                             .foregroundColor(.white)
-                                        TextField("", text: $username)
+                                        TextField("you@example.com", text: $email)
                                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        
                                             .frame(width: 250)
+                                            .autocapitalization(.none)
+                                            .keyboardType(.emailAddress)
+                                        
                                         Text("enter password:")
                                             .foregroundColor(.white)
-                                        SecureField("", text: $password)
-                                            .textFieldStyle(RoundedBorderTextFieldStyle()) .frame(width: 250)
-                                        NavigationLink(destination: HomeView(), isActive: $goNext) {
-                                            Button(action: { goNext = true; }) {
+                                        SecureField("Password", text: $password)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                                            .frame(width: 250)
+                                        
+                                        if !errorMessage.isEmpty {
+                                            Text(errorMessage)
+                                                .foregroundColor(.red)
+                                                .font(.system(size: 14))
+                                        }
+                                        
+                                        Button(action: loginTapped) {
+                                            HStack {
+                                                if isLoading {
+                                                    ProgressView().scaleEffect(0.8)
+                                                }
                                                 Text("OK")
                                                     .font(.headline)
                                                     .foregroundColor(.white)
                                                     .padding()
                                                     .frame(width: 100)
                                                     .background(Color("grey"))
-                                                .cornerRadius(8) }
+                                                    .cornerRadius(8)
+                                            }
                                         }
+                                        .disabled(email.isEmpty || password.isEmpty || isLoading)
+                                        
                                     } else {
-                                        Text("create username:")
+                                        Text("create email:")
                                             .foregroundColor(.white)
-                                        TextField("", text: $username)
+                                        TextField("you@example.com", text: $email)
                                             .textFieldStyle(RoundedBorderTextFieldStyle())
                                             .frame(width: 250)
+                                            .autocapitalization(.none)
+                                            .keyboardType(.emailAddress)
+                                        
                                         Text("create password:")
                                             .foregroundColor(.white)
-                                        SecureField("", text: $password)
+                                        SecureField("Password", text: $password)
                                             .textFieldStyle(RoundedBorderTextFieldStyle())
                                             .frame(width: 250)
-                                        NavigationLink(destination: PreferencesView(), isActive: $goNext) {
-                                            
-                                            Button(action: {
-                                                goNext = true })
-                                            {
+                                        
+                                        if !errorMessage.isEmpty {
+                                            Text(errorMessage)
+                                                .foregroundColor(.red)
+                                                .font(.system(size: 14))
+                                        }
+                                        
+                                        Button(action: signUpTapped) {
+                                            HStack {
+                                                if isLoading {
+                                                    ProgressView().scaleEffect(0.8)
+                                                }
                                                 Text("OK")
                                                     .font(.headline)
                                                     .foregroundColor(.white)
-                                                    .padding() .frame(width: 100)
+                                                    .padding()
+                                                    .frame(width: 100)
                                                     .background(Color("grey"))
-                                                .cornerRadius(8) } } } }
-                                .padding() } } } }
-                .padding()
+                                                    .cornerRadius(8)
+                                            }
+                                        }
+                                        .disabled(email.isEmpty || password.isEmpty || isLoading)
+                                    }
+                                    
+                                    // Hidden NavigationLinks — triggered only on success
+                                    NavigationLink(destination: HomeView(), isActive: $navigateToHome) { EmptyView() }
+                                    NavigationLink(destination: PreferencesView(), isActive: $navigateToPreferences) { EmptyView() }
+                                }
+                                .padding()
+                            }
+                        }
+                    }
+                    .padding()
+                }
             }
-            
         }
         .ignoresSafeArea()
         .statusBarHidden(true)
-    } }
+    }
+
+   // MARK: - Actions
+   private func loginTapped() {
+       errorMessage = ""
+       isLoading = true
+       FirebaseAuthManager.shared.login(email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+                                        password: password) { result in
+           isLoading = false
+           switch result {
+           case .success:
+               errorMessage = ""
+               navigateToHome = true
+           case .failure(let error):
+               errorMessage = error.localizedDescription
+               navigateToHome = false
+           }
+       }
+   }
+
+   private func signUpTapped() {
+       errorMessage = ""
+       isLoading = true
+       FirebaseAuthManager.shared.signUp(email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+                                         password: password) { result in
+           isLoading = false
+           switch result {
+           case .success:
+               errorMessage = ""
+               navigateToPreferences = true
+           case .failure(let error):
+               errorMessage = error.localizedDescription
+               navigateToPreferences = false
+           }
+       }
+   }
+}
     
        
     
@@ -471,7 +556,10 @@ struct WelcomeView: View {
 
 //MARK: - Create Account
 struct CreateAccountView: View {
-    @State private var username: String = ""
+   
+    
+    /*
+     @State private var username: String = ""
     @State private var password: String = ""
     @State private var navigateToPreferences = false
     
@@ -535,10 +623,68 @@ struct CreateAccountView: View {
         UserDefaults.standard.set(username, forKey: "savedUsername")
         UserDefaults.standard.set(password, forKey: "savedPassword")
     }
+     */
+
+        @State private var email = ""
+        @State private var password = ""
+        @State private var errorMessage = ""
+        @State private var navigateToPreferences = false
+    @State private var navigateToHome = false
+
+        var body: some View {
+            VStack(spacing: 20) {
+                Text("Create Account")
+                    .font(.custom("Quicksand-Regular", size: 30))
+                    .fontWeight(.bold)
+                    .padding(.top, 60)
+
+                TextField("Enter Email", text: $email)
+                    .keyboardType(.emailAddress)
+                    .autocapitalization(.none)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+
+                SecureField("Enter Password", text: $password)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.custom("Quicksand-Regular", size: 18))
+                }
+
+                Button(action: {
+                    FirebaseAuthManager.shared.signUp(email: email, password: password) { result in
+                        switch result {
+                        case .success:
+                            errorMessage = ""
+                            navigateToHome = true
+                        case .failure(let error):
+                            errorMessage = error.localizedDescription
+                            navigateToHome = false
+                        }
+                    }
+                }) {
+                    Text("Sign Up")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.darkestGrey)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .disabled(email.isEmpty || password.isEmpty)
+
+                NavigationLink(destination: PreferencesView(), isActive: $navigateToPreferences) {
+                    EmptyView()
+                }
+            }
+            .padding()
+            .navigationTitle("Create Account")
+        }
 }
 
 //MARK: - Login View
 struct LoginView: View {
+ /*
     @State private var username: String = ""
     @State private var password: String = ""
     @State private var loginFailed = false
@@ -606,7 +752,59 @@ struct LoginView: View {
         let savedPassword = UserDefaults.standard.string(forKey: "savedPassword") ?? ""
         return username == savedUsername && password == savedPassword
     }
-}
+  */
+    @State private var email = ""
+    @State private var password = ""
+    @State private var errorMessage = ""
+    @State private var navigateToHome = false
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+                TextField("Email", text: $email)
+                    .textFieldStyle(.roundedBorder)
+                    .autocapitalization(.none)
+                    .keyboardType(.emailAddress)
+                
+                SecureField("Password", text: $password)
+                    .textFieldStyle(.roundedBorder)
+                
+                if !errorMessage.isEmpty {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                }
+                
+                Button(action: {
+                    FirebaseAuthManager.shared.login(email: email, password: password) { result in
+                        switch result {
+                        case .success:
+                            errorMessage = ""
+                            navigateToHome = true  // ✅ Navigate only on success
+                        case .failure(let error):
+                            errorMessage = error.localizedDescription
+                            navigateToHome = false
+                        }
+                    }
+                }) {
+                    Text("Log In")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                }
+                .disabled(email.isEmpty || password.isEmpty)
+                
+                NavigationLink("Sign Up", destination: LoginView())
+            }
+            .padding()
+            .navigationDestination(isPresented: $navigateToHome) {
+                HomeView()  // ✅ Navigate to HomeView only if login succeeds
+            }
+        }
+    }
+    }
 
 
 
@@ -1094,6 +1292,73 @@ struct SettingsView: View {
             
         }
     
-    
+//MARK: - Log in/ sign up user backend
+final class FirebaseAuthManager {
+    static let shared = FirebaseAuthManager()
+    private init() {}
+
+    func signUp(email: String, password: String, completion: @escaping (Result<AuthDataResult, Error>) -> Void) {
+        Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
+            if let error = error as NSError? {
+                let authError: NSError
+                switch AuthErrorCode(rawValue: error.code) {
+                case .emailAlreadyInUse:
+                    authError = NSError(domain: "", code: error.code, userInfo: [NSLocalizedDescriptionKey: "This email is already registered. Please log in instead."])
+                case .invalidEmail:
+                    authError = NSError(domain: "", code: error.code, userInfo: [NSLocalizedDescriptionKey: "Invalid email format."])
+                case .weakPassword:
+                    authError = NSError(domain: "", code: error.code, userInfo: [NSLocalizedDescriptionKey: "Password is too weak. Use at least 6 characters."])
+                default:
+                    authError = error
+                }
+                completion(.failure(authError))
+                return
+            }
+
+            if let authResult = authResult {
+                completion(.success(authResult))
+            }
+        }
+    }
+
+    func login(email: String, password: String, completion: @escaping (Result<AuthDataResult, Error>) -> Void) {
+        Auth.auth().signIn(withEmail: email, password: password) { authResult, error in
+            if let err = error as NSError? {
+                let mapped = Self.mapError(err)
+                DispatchQueue.main.async { completion(.failure(mapped)) }
+                return
+            }
+            if let authResult = authResult {
+                DispatchQueue.main.async { completion(.success(authResult)) }
+            } else {
+                DispatchQueue.main.async { completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown login error"]))) }
+            }
+        }
+    }
+
+    func signOut() throws {
+        try Auth.auth().signOut()
+    }
+
+    private static func mapError(_ error: NSError) -> NSError {
+        guard let code = AuthErrorCode(rawValue: error.code) else { return error }
+        let message: String
+        switch code {
+        case .userNotFound:
+            message = "No account found for this email. Please sign up first."
+        case .wrongPassword:
+            message = "Incorrect password. Please try again."
+        case .invalidEmail:
+            message = "Invalid email format."
+        case .emailAlreadyInUse:
+            message = "This email is already registered. Try logging in."
+        case .networkError:
+            message = "Network error. Check your connection."
+        default:
+            message = error.localizedDescription
+        }
+        return NSError(domain: error.domain, code: error.code, userInfo: [NSLocalizedDescriptionKey: message])
+    }
+}
     
 
