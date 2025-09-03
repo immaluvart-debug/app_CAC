@@ -6,6 +6,89 @@ import PhotosUI
 import Foundation
 import FirebaseAuth
 
+import FirebaseFirestore
+import FirebaseStorage
+
+struct ScanItem: Identifiable, Codable {
+    @DocumentID var id: String?
+    var title: String
+    var energy: Double
+    var fat: Double
+    var carbohydrates: Double
+    var sugars: Double
+    var fiber: Double
+    var proteins: Double
+    var salt: Double
+    var greenScore: String
+    var imageURL: String
+    var scannedAt: Date
+}
+
+final class FirestoreManager {
+    static let shared = FirestoreManager()
+    private let db = Firestore.firestore()
+    private let storage = Storage.storage()
+
+    private init() {}
+
+    // Save scan item to Firestore
+    func saveScan(for userID: String, item: ScanItem, completion: @escaping (Error?) -> Void) {
+        do {
+            try db.collection("users")
+                .document(userID)
+                .collection("scans")
+                .document()
+                .setData(from: item)
+            completion(nil)
+        } catch {
+            completion(error)
+        }
+    }
+
+    // Fetch recent scans for a user
+    func fetchScans(for userID: String, completion: @escaping ([ScanItem]) -> Void) {
+        db.collection("users")
+            .document(userID)
+            .collection("scans")
+            .order(by: "scannedAt", descending: true)
+            .limit(to: 10)
+            .getDocuments { snapshot, error in
+                guard let docs = snapshot?.documents, error == nil else {
+                    completion([])
+                    return
+                }
+
+                let scans = docs.compactMap { try? $0.data(as: ScanItem.self) }
+                completion(scans)
+            }
+    }
+
+    // Upload custom image to Firebase Storage
+    func uploadImage(_ image: UIImage, userID: String, completion: @escaping (Result<String, Error>) -> Void) {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            completion(.failure(NSError(domain: "ImageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to compress image"])))
+            return
+        }
+
+        let ref = storage.reference().child("users/\(userID)/scans/\(UUID().uuidString).jpg")
+        ref.putData(imageData, metadata: nil) { _, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            ref.downloadURL { url, error in
+                if let url = url {
+                    completion(.success(url.absoluteString))
+                } else {
+                    completion(.failure(error ?? NSError(domain: "ImageURL", code: -1, userInfo: nil)))
+                }
+            }
+        }
+    }
+}
+
+
 // Mark: - ContentView
 struct ContentView: View {
     
@@ -161,7 +244,6 @@ struct ContentView: View {
         }
     }
 
-    // MARK: - Fetch Green Score
     func fetchGreenScore(for barcode: String) {
         guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json") else {
             greenScoreResult = "Invalid barcode"
@@ -179,7 +261,6 @@ struct ContentView: View {
             struct Nutriments: Codable {
                 let energy_kcal: Double?
                 let fat: Double?
-                let saturated_fat: Double?
                 let carbohydrates: Double?
                 let sugars: Double?
                 let fiber: Double?
@@ -188,6 +269,7 @@ struct ContentView: View {
             }
 
             struct Product: Codable {
+                let product_name: String?
                 let ecoscore_grade: String?
                 let image_url: String?
                 let nutriments: Nutriments?
@@ -211,19 +293,42 @@ struct ContentView: View {
                     }
 
                     if let n = product.nutriments {
-                        let info = """
+                        nutritionInfo = """
                         Energy: \(n.energy_kcal ?? 0) kcal
                         Fat: \(n.fat ?? 0) g
-                        Saturated Fat: \(n.saturated_fat ?? 0) g
-                        Carbohydrates: \(n.carbohydrates ?? 0) g
+                        Carbs: \(n.carbohydrates ?? 0) g
                         Sugars: \(n.sugars ?? 0) g
                         Fiber: \(n.fiber ?? 0) g
                         Proteins: \(n.proteins ?? 0) g
                         Salt: \(n.salt ?? 0) g
                         """
-                        nutritionInfo = info
                     } else {
                         nutritionInfo = "No nutrition data available"
+                    }
+
+                    // ✅ Save scanned item to Firestore
+                    if let user = Auth.auth().currentUser {
+                        let scanItem = ScanItem(
+                            title: product.product_name ?? "Unknown Product",
+                            energy: product.nutriments?.energy_kcal ?? 0,
+                            fat: product.nutriments?.fat ?? 0,
+                            carbohydrates: product.nutriments?.carbohydrates ?? 0,
+                            sugars: product.nutriments?.sugars ?? 0,
+                            fiber: product.nutriments?.fiber ?? 0,
+                            proteins: product.nutriments?.proteins ?? 0,
+                            salt: product.nutriments?.salt ?? 0,
+                            greenScore: product.ecoscore_grade?.uppercased() ?? "Unknown",
+                            imageURL: product.image_url ?? "",
+                            scannedAt: Date()
+                        )
+
+                        FirestoreManager.shared.saveScan(for: user.uid, item: scanItem) { error in
+                            if let error = error {
+                                print("🔥 Failed to save scan: \(error.localizedDescription)")
+                            } else {
+                                print("✅ Scan saved successfully!")
+                            }
+                        }
                     }
                 }
             } else {
@@ -233,6 +338,7 @@ struct ContentView: View {
             }
         }.resume()
     }
+
 
     // MARK: - Barcode Scanner
     struct BarcodeScannerView: UIViewControllerRepresentable {
@@ -684,75 +790,6 @@ struct CreateAccountView: View {
 
 //MARK: - Login View
 struct LoginView: View {
- /*
-    @State private var username: String = ""
-    @State private var password: String = ""
-    @State private var loginFailed = false
-    @State private var navigateToPreferences = false
-    
-    var body: some View {
-        ZStack {
-            Color.ourgreen.ignoresSafeArea()
-        }
-       
-        VStack(spacing: 20) {
-            Text("Login")
-                .font(.custom("Quicksand-Regular", size: 30))
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding(.top, 60)
-            
-            TextField("Username", text: $username)
-                .font(.custom("Quicksand-Regular", size: 20))
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .autocapitalization(.none)
-            
-            SecureField("Password", text: $password)
-                .font(.custom("Quicksand-Regular", size: 20))
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            if loginFailed {
-                Text("Invalid username or password")
-                    .foregroundColor(.red)
-                    .font(.custom("Quicksand-Regular", size: 25))
-            }
-            
-            Button(action: {
-                if checkCredentials() {
-                    loginFailed = false
-                    navigateToPreferences = true
-                } else {
-                    loginFailed = true
-                }
-            }) {
-                Text("Log In")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.darkestGrey)
-                    .foregroundColor(.white)
-                    .cornerRadius(0)
-                    .font(.custom("Quicksand-Regular", size: 25))
-            }
-            .padding(.top)
-            
-            // Navigate to PreferencesView
-            NavigationLink(destination: PreferencesView(), isActive: $navigateToPreferences) {
-                EmptyView()
-            }
-            
-            Spacer()
-        }
-        .padding()
-        .navigationTitle("Login")
-    }
-    
-    // Check stored credentials
-    func checkCredentials() -> Bool {
-        let savedUsername = UserDefaults.standard.string(forKey: "savedUsername") ?? ""
-        let savedPassword = UserDefaults.standard.string(forKey: "savedPassword") ?? ""
-        return username == savedUsername && password == savedPassword
-    }
-  */
     @State private var email = ""
     @State private var password = ""
     @State private var errorMessage = ""
@@ -1048,7 +1085,7 @@ struct GoalRow: View {
         .buttonStyle(PlainButtonStyle())
     }
 }
-
+/*
 struct HomeView: View {
     var body: some View {
         NavigationView {
@@ -1190,6 +1227,7 @@ struct HomeView: View {
     }
 }
 
+
         // MARK: - Scan Item View
         
         func scanItem(
@@ -1252,7 +1290,160 @@ struct HomeView: View {
                     .foregroundColor(.white)
             }
         }
-        
+        */
+struct HomeView: View {
+    @State private var recentScans: [ScanItem] = []
+
+     var body: some View {
+         NavigationView {
+             ZStack {
+                 Color("ourgreen").ignoresSafeArea()
+
+                 VStack(spacing: 15) {
+                     // MARK: - Top Logo & Recommended Bar
+                     VStack(spacing: 5) {
+                         Image("app_CAC icon")
+                             .resizable()
+                             .scaledToFit()
+                             .frame(width: 140, height: 140)
+
+                         HStack(spacing: 0) {
+                             Text("RECOMMENDED")
+                                 .font(.custom("BebasNeue-Regular", size: 22))
+                                 .foregroundColor(.white)
+                                 .frame(maxWidth: .infinity)
+                                 .padding(.vertical, 8)
+                                 .background(Color("grey"))
+
+                             Text("NEAR ME")
+                                 .font(.custom("BebasNeue-Regular", size: 22))
+                                 .foregroundColor(.white)
+                                 .frame(maxWidth: .infinity)
+                                 .padding(.vertical, 8)
+                                 .background(Color("grey"))
+                         }
+                         .cornerRadius(5)
+                         .padding(.horizontal, 15)
+                     }
+
+                     // MARK: - Recent Scans Section
+                     VStack(alignment: .leading, spacing: 10) {
+                         Text("Recent Scans")
+                             .font(.title2)
+                             .fontWeight(.bold)
+                             .padding(.leading, 15)
+                             .padding(.top, 5)
+
+                         ScrollView {
+                             VStack(spacing: 15) {
+                                 ForEach(recentScans) { scan in
+                                     scanItem(scan: scan)
+                                 }
+                             }
+                             .padding(.horizontal, 15)
+                             .padding(.vertical, 10)
+                         }
+                     }
+                     .background(Color("lightestgreen"))
+                     .cornerRadius(15)
+                     .padding(.horizontal, 10)
+                     .frame(height: 400)
+
+                     // MARK: - Scan Button
+                     NavigationLink(destination: ContentView()) {
+                         Text("SCAN")
+                             .font(.custom("BebasNeue-Regular", size: 30))
+                             .frame(width: 180, height: 60)
+                             .foregroundColor(.white)
+                             .background(Color("grey"))
+                             .cornerRadius(10)
+                     }
+                     .padding(.top, 10)
+
+                     Spacer()
+                 }
+             }
+         }
+         .onAppear(perform: fetchRecentScans)
+     }
+
+     // MARK: - Fetch Scans
+     private func fetchRecentScans() {
+         if let user = Auth.auth().currentUser {
+             FirestoreManager.shared.fetchScans(for: user.uid) { scans in
+                 DispatchQueue.main.async {
+                     self.recentScans = scans
+                 }
+             }
+         }
+     }
+
+     // MARK: - Scan Item Card
+     private func scanItem(scan: ScanItem) -> some View {
+         VStack(spacing: 0) {
+             HStack(alignment: .top, spacing: 15) {
+                 // Product Image
+                 AsyncImage(url: URL(string: scan.imageURL)) { phase in
+                     switch phase {
+                     case .empty:
+                         ProgressView()
+                             .frame(width: 80, height: 80)
+                     case .success(let image):
+                         image.resizable()
+                             .scaledToFill()
+                             .frame(width: 80, height: 80)
+                             .clipShape(RoundedRectangle(cornerRadius: 8))
+                     case .failure:
+                         Image(systemName: "photo")
+                             .resizable()
+                             .scaledToFit()
+                             .frame(width: 80, height: 80)
+                             .background(Color.gray.opacity(0.3))
+                             .clipShape(RoundedRectangle(cornerRadius: 8))
+                     @unknown default:
+                         EmptyView()
+                     }
+                 }
+
+                 // Nutrition Info
+                 VStack(alignment: .leading, spacing: 4) {
+                     Text(scan.title)
+                         .font(.headline)
+                         .foregroundColor(.white)
+                         .lineLimit(2)
+
+                     Text("Energy: \(String(format: "%.2f", scan.energy)) kcal")
+                         .foregroundColor(.white)
+                     Text("Fat: \(String(format: "%.2f", scan.fat)) g")
+                         .foregroundColor(.white)
+                     Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g")
+                         .foregroundColor(.white)
+                     Text("Sugars: \(String(format: "%.2f", scan.sugars)) g")
+                         .foregroundColor(.white)
+                     Text("Fiber: \(String(format: "%.2f", scan.fiber)) g")
+                         .foregroundColor(.white)
+                 }
+             }
+             .padding()
+             .background(Color("grey"))
+             .cornerRadius(15)
+
+             // Green Score Bar
+             Text("GREEN SCORE: \(scan.greenScore)")
+                 .font(.custom("BebasNeue-Regular", size: 18))
+                 .frame(width: 300, height: 35)
+                 .background(
+                     scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
+                     ? Color.green
+                     : Color.red
+                 )
+                 .cornerRadius(8)
+                 .foregroundColor(.white)
+                 .padding(.top, 5)
+         }
+     }
+}
+
         //MARK: - Settings
 struct SettingsView: View {
     var body: some View {
