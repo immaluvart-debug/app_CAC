@@ -1291,158 +1291,212 @@ struct HomeView: View {
             }
         }
         */
+
 struct HomeView: View {
     @State private var recentScans: [ScanItem] = []
 
-     var body: some View {
-         NavigationView {
-             ZStack {
-                 Color("ourgreen").ignoresSafeArea()
+    @AppStorage("favoriteScans") private var favoriteScanData: Data = Data()
+    @State private var favoriteScans: [ScanItem] = []
 
-                 VStack(spacing: 15) {
-                     // MARK: - Top Logo & Recommended Bar
-                     VStack(spacing: 5) {
-                         Image("app_CAC icon")
-                             .resizable()
-                             .scaledToFit()
-                             .frame(width: 140, height: 140)
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color("ourgreen").ignoresSafeArea()
 
-                         HStack(spacing: 0) {
-                             Text("RECOMMENDED")
-                                 .font(.custom("BebasNeue-Regular", size: 22))
-                                 .foregroundColor(.white)
-                                 .frame(maxWidth: .infinity)
-                                 .padding(.vertical, 8)
-                                 .background(Color("grey"))
+                VStack(spacing: 15) {
+                    // MARK: - Top Logo & Recommended Bar
+                    VStack(spacing: 5) {
+                        Image("app_CAC icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 140, height: 140)
 
-                             Text("NEAR ME")
-                                 .font(.custom("BebasNeue-Regular", size: 22))
-                                 .foregroundColor(.white)
-                                 .frame(maxWidth: .infinity)
-                                 .padding(.vertical, 8)
-                                 .background(Color("grey"))
-                         }
-                         .cornerRadius(5)
-                         .padding(.horizontal, 15)
-                     }
+                        HStack(spacing: 0) {
+                            NavigationLink(destination: RecommendedFoodsView(recentScans: recentScans)) {
+                                Text("RECOMMENDED")
+                                    .font(.custom("BebasNeue-Regular", size: 22))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                                    .background(Color("grey"))
+                            }
 
-                     // MARK: - Recent Scans Section
-                     VStack(alignment: .leading, spacing: 10) {
-                         Text("Recent Scans")
-                             .font(.title2)
-                             .fontWeight(.bold)
-                             .padding(.leading, 15)
-                             .padding(.top, 5)
+                            Text("NEAR ME")
+                                .font(.custom("BebasNeue-Regular", size: 22))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(Color("grey"))
+                        }
+                        .cornerRadius(5)
+                        .padding(.horizontal, 15)
+                    }
+                    .toolbar {
+                        ToolbarItem(placement: .navigationBarTrailing) {
+                            NavigationLink(destination: FavoritesView(favoriteScans: $favoriteScans)) {
+                                Image("heart_icon")
+                                    .resizable()
+                                    .frame(width: 28, height: 28)
+                            }
+                        }
+                    }
 
-                         ScrollView {
-                             VStack(spacing: 15) {
-                                 ForEach(recentScans) { scan in
-                                     scanItem(scan: scan)
-                                 }
-                             }
-                             .padding(.horizontal, 15)
-                             .padding(.vertical, 10)
-                         }
-                     }
-                     .background(Color("lightestgreen"))
-                     .cornerRadius(15)
-                     .padding(.horizontal, 10)
-                     .frame(height: 400)
+                    // MARK: - Recent Scans Section
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Recent Scans")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .padding(.leading, 15)
+                            .padding(.top, 5)
 
-                     // MARK: - Scan Button
-                     NavigationLink(destination: ContentView()) {
-                         Text("SCAN")
-                             .font(.custom("BebasNeue-Regular", size: 30))
-                             .frame(width: 180, height: 60)
-                             .foregroundColor(.white)
-                             .background(Color("grey"))
-                             .cornerRadius(10)
-                     }
-                     .padding(.top, 10)
+                        ScrollView {
+                            VStack(spacing: 15) {
+                                ForEach(recentScans) { scan in
+                                    scanItem(scan: scan)
+                                }
+                            }
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 10)
+                        }
+                    }
+                    .background(Color("lightestgreen"))
+                    .cornerRadius(15)
+                    .padding(.horizontal, 10)
+                    .frame(height: 400)
 
-                     Spacer()
-                 }
-             }
-         }
-         .onAppear(perform: fetchRecentScans)
-     }
+                    // MARK: - Scan Button
+                    NavigationLink(destination: ContentView()) {
+                        Text("SCAN")
+                            .font(.custom("BebasNeue-Regular", size: 30))
+                            .frame(width: 180, height: 60)
+                            .foregroundColor(.white)
+                            .background(Color("grey"))
+                            .cornerRadius(10)
+                    }
+                    .padding(.top, 10)
 
-     // MARK: - Fetch Scans
-     private func fetchRecentScans() {
-         if let user = Auth.auth().currentUser {
-             FirestoreManager.shared.fetchScans(for: user.uid) { scans in
-                 DispatchQueue.main.async {
-                     self.recentScans = scans
-                 }
-             }
-         }
-     }
+                    Spacer()
+                }
+            }
+        }
+        .onAppear {
+            fetchRecentScans()
+            loadFavorites()
+        }
+    }
 
-     // MARK: - Scan Item Card
-     private func scanItem(scan: ScanItem) -> some View {
-         VStack(spacing: 0) {
-             HStack(alignment: .top, spacing: 15) {
-                 // Product Image
-                 AsyncImage(url: URL(string: scan.imageURL)) { phase in
-                     switch phase {
-                     case .empty:
-                         ProgressView()
-                             .frame(width: 80, height: 80)
-                     case .success(let image):
-                         image.resizable()
-                             .scaledToFill()
-                             .frame(width: 80, height: 80)
-                             .clipShape(RoundedRectangle(cornerRadius: 8))
-                     case .failure:
-                         Image(systemName: "photo")
-                             .resizable()
-                             .scaledToFit()
-                             .frame(width: 80, height: 80)
-                             .background(Color.gray.opacity(0.3))
-                             .clipShape(RoundedRectangle(cornerRadius: 8))
-                     @unknown default:
-                         EmptyView()
-                     }
-                 }
+    // MARK: - Scan Item View
+    private func scanItem(scan: ScanItem) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 15) {
+                AsyncImage(url: URL(string: scan.imageURL)) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 80, height: 80)
+                    case .success(let image):
+                        image.resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    case .failure:
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
+                            .background(Color.gray.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
 
-                 // Nutrition Info
-                 VStack(alignment: .leading, spacing: 4) {
-                     Text(scan.title)
-                         .font(.headline)
-                         .foregroundColor(.white)
-                         .lineLimit(2)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(scan.title)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .lineLimit(2)
 
-                     Text("Energy: \(String(format: "%.2f", scan.energy)) kcal")
-                         .foregroundColor(.white)
-                     Text("Fat: \(String(format: "%.2f", scan.fat)) g")
-                         .foregroundColor(.white)
-                     Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g")
-                         .foregroundColor(.white)
-                     Text("Sugars: \(String(format: "%.2f", scan.sugars)) g")
-                         .foregroundColor(.white)
-                     Text("Fiber: \(String(format: "%.2f", scan.fiber)) g")
-                         .foregroundColor(.white)
-                 }
-             }
-             .padding()
-             .background(Color("grey"))
-             .cornerRadius(15)
+                        Spacer()
 
-             // Green Score Bar
-             Text("GREEN SCORE: \(scan.greenScore)")
-                 .font(.custom("BebasNeue-Regular", size: 18))
-                 .frame(width: 300, height: 35)
-                 .background(
-                     scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
-                     ? Color.green
-                     : Color.red
-                 )
-                 .cornerRadius(8)
-                 .foregroundColor(.white)
-                 .padding(.top, 5)
-         }
-     }
+                        Button(action: {
+                            toggleFavorite(scan)
+                        }) {
+                            Image(systemName: isFavorite(scan) ? "heart.fill" : "heart")
+                                .foregroundColor(isFavorite(scan) ? .red : .white)
+                        }
+                    }
+
+                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
+                    Text("Fat: \(String(format: "%.2f", scan.fat)) g").foregroundColor(.white)
+                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g").foregroundColor(.white)
+                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g").foregroundColor(.white)
+                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g").foregroundColor(.white)
+                }
+            }
+            .padding()
+            .background(Color("grey"))
+            .cornerRadius(15)
+
+            Text("GREEN SCORE: \(scan.greenScore)")
+                .font(.custom("BebasNeue-Regular", size: 18))
+                .frame(width: 300, height: 35)
+                .background(
+                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
+                    ? Color.green
+                    : Color.red
+                )
+                .cornerRadius(8)
+                .foregroundColor(.white)
+                .padding(.top, 5)
+        }
+    }
+
+    // MARK: - Fetch Recent Scans
+    private func fetchRecentScans() {
+        if let user = Auth.auth().currentUser {
+            FirestoreManager.shared.fetchScans(for: user.uid) { scans in
+                DispatchQueue.main.async {
+                    self.recentScans = scans
+                }
+            }
+        }
+    }
+
+    // MARK: - Favorites Handling
+    private func loadFavorites() {
+        if let decoded = try? JSONDecoder().decode([ScanItem].self, from: favoriteScanData) {
+            favoriteScans = decoded
+        } else {
+            favoriteScans = []
+        }
+    }
+
+    private func saveFavorites() {
+        if let encoded = try? JSONEncoder().encode(favoriteScans) {
+            favoriteScanData = encoded
+        }
+    }
+
+    private func toggleFavorite(_ scan: ScanItem) {
+        if let index = favoriteScans.firstIndex(where: { $0.id == scan.id }) {
+            favoriteScans.remove(at: index)
+        } else {
+            favoriteScans.append(scan)
+        }
+        saveFavorites()
+    }
+
+    private func isFavorite(_ scan: ScanItem) -> Bool {
+        favoriteScans.contains(where: { $0.id == scan.id })
+    }
 }
+
+
+
+     
+
 
         //MARK: - Settings
 struct SettingsView: View {
@@ -1551,5 +1605,300 @@ final class FirebaseAuthManager {
         return NSError(domain: error.domain, code: error.code, userInfo: [NSLocalizedDescriptionKey: message])
     }
 }
+
+//MARK: - Recommended Foods View
+
+struct RecommendedFoodsView: View {
+    @State private var recommendedFoods: [ScanItem] = []
+    @State private var isLoading = true
+
+    var recentScans: [ScanItem]
+
+    var body: some View {
+        ZStack {
+            Color("ourgreen").ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 15) {
+                Text("Your Recommended Foods")
+                    .font(.custom("BebasNeue-Regular", size: 30))
+                    .foregroundColor(.white)
+                    .padding(.top, 20)
+                    .padding(.horizontal)
+
+                if isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if recommendedFoods.isEmpty {
+                    Text("No recommendations found.")
+                        .foregroundColor(.white)
+                        .padding()
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 15) {
+                            ForEach(recommendedFoods) { food in
+                                scanItem(scan: food)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+
+                Spacer()
+            }
+        }
+        .onAppear(perform: fetchRecommendedFoods)
+    }
+
+    private func fetchRecommendedFoods() {
+        // Extract keywords (e.g., titles from recent scans)
+        let keywords = recentScans.map { $0.title }
+
+        APIManager.shared.fetchRecommendations(basedOn: keywords) { foods in
+            DispatchQueue.main.async {
+                self.recommendedFoods = foods.filter {
+                    $0.greenScore.uppercased() == "A" || $0.greenScore.uppercased() == "B"
+                }
+                self.isLoading = false
+            }
+        }
+    }
+
+    private func scanItem(scan: ScanItem) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 15) {
+                AsyncImage(url: URL(string: scan.imageURL)) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView().frame(width: 80, height: 80)
+                    case .success(let image):
+                        image.resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    case .failure:
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
+                            .background(Color.gray.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(scan.title)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .lineLimit(2)
+
+                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal")
+                        .foregroundColor(.white)
+                    Text("Fat: \(String(format: "%.2f", scan.fat)) g")
+                        .foregroundColor(.white)
+                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g")
+                        .foregroundColor(.white)
+                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g")
+                        .foregroundColor(.white)
+                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g")
+                        .foregroundColor(.white)
+                }
+            }
+            .padding()
+            .background(Color("grey"))
+            .cornerRadius(15)
+
+            Text("GREEN SCORE: \(scan.greenScore)")
+                .font(.custom("BebasNeue-Regular", size: 18))
+                .frame(width: 300, height: 35)
+                .background(
+                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
+                    ? Color.green
+                    : Color.red
+                )
+                .cornerRadius(8)
+                .foregroundColor(.white)
+                .padding(.top, 5)
+        }
+    }
+}
+
+//MARK: - Recommended Food Search
+final class APIManager {
+    static let shared = APIManager()
+    private init() {}
+
+    func fetchRecommendations(basedOn keywords: [String], completion: @escaping ([ScanItem]) -> Void) {
+        var results: [ScanItem] = []
+        let group = DispatchGroup()
+
+        for keyword in keywords.prefix(5) { // Limit to top 5 recent
+            let query = keyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+            guard let url = URL(string: "https://world.openfoodfacts.org/cgi/search.pl?search_terms=\(query)&search_simple=1&action=process&json=1") else {
+                continue
+            }
+
+            group.enter()
+            URLSession.shared.dataTask(with: url) { data, _, _ in
+                defer { group.leave() }
+
+                guard
+                    let data = data,
+                    let decoded = try? JSONDecoder().decode(OFFSearchResponse.self, from: data)
+                else {
+                    return
+                }
+
+                let items: [ScanItem] = decoded.products.compactMap { product in
+                    guard let name = product.product_name,
+                          let eco = product.ecoscore_grade,
+                          let img = product.image_url
+                    else { return nil }
+
+                    return ScanItem(
+                        id: UUID().uuidString,
+                        title: name,
+                        energy: product.nutriments.energy_kcal ?? 0,
+                        fat: product.nutriments.fat ?? 0,
+                        carbohydrates: product.nutriments.carbohydrates ?? 0,
+                        sugars: product.nutriments.sugars ?? 0,
+                        fiber: product.nutriments.fiber ?? 0,
+                        proteins: product.nutriments.proteins ?? 0,
+                        salt: product.nutriments.salt ?? 0,
+                        greenScore: eco.uppercased(),
+                        imageURL: img,
+                        scannedAt: Date()
+                    )
+                }
+
+                results.append(contentsOf: items)
+            }.resume()
+        }
+
+        group.notify(queue: .main) {
+            completion(results)
+        }
+    }
+}
+
+// MARK: - Models for decoding OpenFoodFacts search
+struct OFFSearchResponse: Codable {
+    let products: [OFFProduct]
+}
+
+struct OFFProduct: Codable {
+    let product_name: String?
+    let ecoscore_grade: String?
+    let image_url: String?
+    let nutriments: OFFNutriments
+}
+
+struct OFFNutriments: Codable {
+    let energy_kcal: Double?
+    let fat: Double?
+    let carbohydrates: Double?
+    let sugars: Double?
+    let fiber: Double?
+    let proteins: Double?
+    let salt: Double?
+}
+
+//MARK: - Favorites View
+
+struct FavoritesView: View {
+    @Binding var favoriteScans: [ScanItem]
+
+    var body: some View {
+        ZStack {
+            Color("ourgreen").ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 15) {
+                Text("Favorites")
+                    .font(.custom("BebasNeue-Regular", size: 30))
+                    .foregroundColor(.white)
+                    .padding(.top, 20)
+                    .padding(.horizontal)
+
+                if favoriteScans.isEmpty {
+                    Text("No favorite items yet.")
+                        .foregroundColor(.white)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .font(.headline)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 15) {
+                            ForEach(favoriteScans) { scan in
+                                scanItem(scan: scan)
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+
+                Spacer()
+            }
+        }
+    }
+
     
+    private func scanItem(scan: ScanItem) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 15) {
+                AsyncImage(url: URL(string: scan.imageURL)) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView().frame(width: 80, height: 80)
+                    case .success(let image):
+                        image.resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    case .failure:
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
+                            .background(Color.gray.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(scan.title)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .lineLimit(2)
+
+                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
+                    Text("Fat: \(String(format: "%.2f", scan.fat)) g").foregroundColor(.white)
+                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g").foregroundColor(.white)
+                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g").foregroundColor(.white)
+                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g").foregroundColor(.white)
+                }
+            }
+            .padding()
+            .background(Color("grey"))
+            .cornerRadius(15)
+
+            Text("GREEN SCORE: \(scan.greenScore)")
+                .font(.custom("BebasNeue-Regular", size: 18))
+                .frame(width: 300, height: 35)
+                .background(
+                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
+                    ? Color.green
+                    : Color.red
+                )
+                .cornerRadius(8)
+                .foregroundColor(.white)
+                .padding(.top, 5)
+        }
+    }
+}
+
 
