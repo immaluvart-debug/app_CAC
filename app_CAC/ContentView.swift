@@ -1619,7 +1619,7 @@ struct RecommendedFoodsView: View {
             Color("ourgreen").ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 15) {
-                Text("Your Recommended Foods")
+                Text("Your Recommended GreenScore-Friendly Foods")
                     .font(.custom("BebasNeue-Regular", size: 30))
                     .foregroundColor(.white)
                     .padding(.top, 20)
