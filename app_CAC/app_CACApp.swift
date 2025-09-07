@@ -11,32 +11,20 @@ import FirebaseAI
 import FirebaseAuth
 import FirebaseStorage
 import FirebaseAnalytics
-class AppDelegate: NSObject, UIApplicationDelegate {
-  func application(_ application: UIApplication,
-                   didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-    FirebaseApp.configure()
-    return true
-  }
-}
+import UIKit
+import Firebase
 
 @main
 struct app_CACApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @StateObject var favoritesManager = FavoritesManager()
     init() {
-            let appearance = UINavigationBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor.ourgreen
-            appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
-
-            
-            UINavigationBar.appearance().standardAppearance = appearance
-            UINavigationBar.appearance().scrollEdgeAppearance = appearance
-        }
+        FirebaseApp.configure()
+    }
 
     var body: some Scene {
         WindowGroup {
             WelcomeView()
+                .environmentObject(favoritesManager)
         }
     }
 }

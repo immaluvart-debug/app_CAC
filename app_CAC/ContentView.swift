@@ -10,7 +10,7 @@ import FirebaseFirestore
 import FirebaseStorage
 
 struct ScanItem: Identifiable, Codable {
-    @DocumentID var id: String?
+    var id: String
     var title: String
     var energy: Double
     var fat: Double
@@ -24,13 +24,14 @@ struct ScanItem: Identifiable, Codable {
     var scannedAt: Date
 }
 
+
 final class FirestoreManager {
     static let shared = FirestoreManager()
     private let db = Firestore.firestore()
     private let storage = Storage.storage()
-
+    
     private init() {}
-
+    
     // Save scan item to Firestore
     func saveScan(for userID: String, item: ScanItem, completion: @escaping (Error?) -> Void) {
         do {
@@ -44,7 +45,7 @@ final class FirestoreManager {
             completion(error)
         }
     }
-
+    
     // Fetch recent scans for a user
     func fetchScans(for userID: String, completion: @escaping ([ScanItem]) -> Void) {
         db.collection("users")
@@ -57,26 +58,26 @@ final class FirestoreManager {
                     completion([])
                     return
                 }
-
+                
                 let scans = docs.compactMap { try? $0.data(as: ScanItem.self) }
                 completion(scans)
             }
     }
-
+    
     // Upload custom image to Firebase Storage
     func uploadImage(_ image: UIImage, userID: String, completion: @escaping (Result<String, Error>) -> Void) {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             completion(.failure(NSError(domain: "ImageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to compress image"])))
             return
         }
-
+        
         let ref = storage.reference().child("users/\(userID)/scans/\(UUID().uuidString).jpg")
         ref.putData(imageData, metadata: nil) { _, error in
             if let error = error {
                 completion(.failure(error))
                 return
             }
-
+            
             ref.downloadURL { url, error in
                 if let url = url {
                     completion(.success(url.absoluteString))
@@ -87,6 +88,49 @@ final class FirestoreManager {
         }
     }
 }
+    extension FirestoreManager {
+        func fetchFavorites(for userId: String, completion: @escaping ([ScanItem]) -> Void) {
+            let ref = Firestore.firestore()
+                .collection("users")
+                .document(userId)
+                .collection("favorites")
+            
+            ref.getDocuments { snapshot, error in
+                guard let docs = snapshot?.documents, error == nil else {
+                    completion([])
+                    return
+                }
+                let favorites = docs.compactMap { try? $0.data(as: ScanItem.self) }
+                completion(favorites)
+            }
+        }
+
+        func addFavorite(for userId: String, scan: ScanItem, completion: @escaping (Error?) -> Void) {
+            let ref = Firestore.firestore()
+                .collection("users")
+                .document(userId)
+                .collection("favorites")
+                .document(scan.id)
+            
+            do {
+                try ref.setData(from: scan, completion: completion)
+            } catch {
+                completion(error)
+            }
+        }
+
+        func removeFavorite(for userId: String, scanId: String, completion: @escaping (Error?) -> Void) {
+            let ref = Firestore.firestore()
+                .collection("users")
+                .document(userId)
+                .collection("favorites")
+                .document(scanId)
+            
+            ref.delete(completion: completion)
+        }
+    }
+    
+
 
 
 // Mark: - ContentView
@@ -309,6 +353,7 @@ struct ContentView: View {
                     // ✅ Save scanned item to Firestore
                     if let user = Auth.auth().currentUser {
                         let scanItem = ScanItem(
+                            id: UUID().uuidString,
                             title: product.product_name ?? "Unknown Product",
                             energy: product.nutriments?.energy_kcal ?? 0,
                             fat: product.nutriments?.fat ?? 0,
@@ -321,6 +366,7 @@ struct ContentView: View {
                             imageURL: product.image_url ?? "",
                             scannedAt: Date()
                         )
+
 
                         FirestoreManager.shared.saveScan(for: user.uid, item: scanItem) { error in
                             if let error = error {
@@ -598,138 +644,11 @@ struct WelcomeView: View {
    }
 }
     
-       
-    
-    /*
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 30) {
-                Text("Leaf&Fork Login")
-                    .font(.custom("Quicksand-Regular", size: 35))
-                    .fontWeight(.bold)
-                    .padding(.top, 100)
-                
-                NavigationLink(destination: CreateAccountView()) {
-                    Text("Create New Account")
-                        .font(.custom("Quicksand-Regular", size: 20))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.grey)
-                        .foregroundColor(.white)
-                        .cornerRadius(0)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 0)
-                                .stroke(Color.white, lineWidth: 2)
-                        )
-                }
 
-                NavigationLink(destination: LoginView()) {
-                    Text("Returning User")
-                        .font(.custom("Quicksand-Regular", size: 20))
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.darkestGrey)
-                        .foregroundColor(.white)
-                        .cornerRadius(0)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 0)
-                                .stroke(Color.white, lineWidth: 2)
-                        )
-                }
-
-                
-                Spacer()
-                
-                Image("leafIcon")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 200, height: 200)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.horizontal, 40)
-
-            }
-            .padding()
-            .background(Color.ourgreen)
-            .foregroundColor(.white)
-            .edgesIgnoringSafeArea(.all)
-            .navigationTitle("")
-            .navigationBarHidden(true)
-        }
-    }
-     */
-    
 
 
 //MARK: - Create Account
 struct CreateAccountView: View {
-   
-    
-    /*
-     @State private var username: String = ""
-    @State private var password: String = ""
-    @State private var navigateToPreferences = false
-    
-    var body: some View {
-        ZStack {
-            Color.ourgreen.ignoresSafeArea()
-        }
-        
-        VStack(spacing: 20) {
-            Text("Create Account")
-                .font(.custom("Quicksand-Regular", size: 30))
-                .fontWeight(.bold)
-                .padding(.top, 60)
-            
-            // Username
-            VStack(alignment: .leading) {
-                Text("Create Username")
-                    .font(.custom("Quicksand-Regular", size: 20))
-                TextField("Enter username", text: $username)
-                    .font(.custom("Quicksand-Regular", size: 20))
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .autocapitalization(.none)
-            }
-            
-            // Password
-            VStack(alignment: .leading) {
-                Text("Create Password")
-                    .font(.custom("Quicksand-Regular", size: 20))
-                SecureField("Enter password", text: $password)
-                    .font(.custom("Quicksand-Regular", size: 20))
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-            }
-            
-            // Submit Button
-            Button(action: {
-                saveCredentials()
-                navigateToPreferences = true
-            }) {
-                Text("Register")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.grey)
-                    .foregroundColor(.white)
-                    .cornerRadius(0)
-                    .font(.custom("Quicksand-Regular", size: 25))
-            }
-            .disabled(username.isEmpty || password.isEmpty)
-            
-            NavigationLink(destination: PreferencesView(), isActive: $navigateToPreferences) {
-                EmptyView()
-            }
-            
-            Spacer()
-        }
-        .padding()
-        .navigationTitle("Create Account")
-    }
-    
-    // Save credentials using UserDefaults
-    func saveCredentials() {
-        UserDefaults.standard.set(username, forKey: "savedUsername")
-        UserDefaults.standard.set(password, forKey: "savedPassword")
-    }
-     */
 
         @State private var email = ""
         @State private var password = ""
@@ -1085,217 +1004,12 @@ struct GoalRow: View {
         .buttonStyle(PlainButtonStyle())
     }
 }
-/*
-struct HomeView: View {
-    var body: some View {
-        NavigationView {
-            ZStack {
-                // Background color
-                Color("ourgreen")
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 20) {
-                    
-                    // MARK: - Top Section (Centered Logo + Right Icons)
-                    ZStack {
-                        // Centered Logo
-                        Image("app_CAC icon")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 150, height: 150)
-                            .padding(.top, 0)
-                        
-                        HStack {
-                            Spacer()
-                            VStack {
-                                // Settings Gear (navigation link)
-                                NavigationLink(destination: SettingsView()) {
-                                    Image(systemName: "gearshape")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: 40, height: 40)
-                                        .padding(.top, 10)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                
-                                Spacer()
-                                
-                                // Heart Icon
-                                Image("heart_icon")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 50, height: 50)
-                                    .padding(.bottom, 0)
-                            }
-                            .padding(.trailing, 15)
-                        }
-                    }
-                    .padding(.top, 20)
-                    .navigationBarHidden(true)
-                    
-                    // MARK: - RECOMMENDED / NEAR ME Buttons
-                    HStack(spacing: 0) {
-                        NavigationLink(destination: FillerView()) {
-                            Text("RECOMMENDED")
-                                .font(.custom("BebasNeue-Regular", size: 30))
-                                .frame(width: 172)
-                                .padding(.vertical, 5)
-                                .foregroundColor(.white)
-                                .background(Color("grey"))
-                        }
-                        
-                        NavigationLink(destination: FillerView()) {
-                            Text("NEAR ME")
-                                .font(.custom("BebasNeue-Regular", size: 30))
-                                .frame(width: 172)
-                                .padding(.vertical, 5)
-                                .foregroundColor(.white)
-                                .background(Color("grey"))
-                        }
-                    }
-                    .cornerRadius(5)
-                    
-                    // MARK: - Recent Scans Section
-                    VStack(alignment: .leading, spacing: 10) {
-                        
-                        
-                        VStack(alignment: .leading) {
-                           
-                            HStack {
-                                Text("Recent Scans")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-                                    .padding(.top, 15)
-                                Spacer()
-                            }
-                            .padding(.leading, 15)
-                            
-                            ScrollView {
-                                VStack(spacing: 20) {
-                                    // First scan item (green)
-                                    scanItem(
-                                        imageName: "imgPlaceholder",
-                                        title: "Doritos bits bbq",
-                                        energy: "x Cal",
-                                        fat: "29.0g",
-                                        yada: "6g",
-                                        sodium: "999mg",
-                                        other: "67j",
-                                        greenScore: 5,
-                                        borderColor: .green
-                                    )
-                                    
-                                    // Second scan item (red)
-                                    scanItem(
-                                        imageName: "imgPlaceholder",
-                                        title: "Flaming Hot Cheetos",
-                                        energy: "x Cal",
-                                        fat: "29.0g",
-                                        yada: "6g",
-                                        sodium: "999mg",
-                                        other: "67j",
-                                        greenScore: 4,
-                                        borderColor: .red
-                                    )
-                                }
-                                .padding(.horizontal, 15)
-                                .padding(.top, 5)
-                                .padding(.bottom, 15)
-                            }
-                        }
-                        .background(Color("lightestgreen"))
-                        .cornerRadius(10)
-                        .padding(.horizontal, 10)
-                        .frame(height: 350)
-                    }
-                    
-                    // MARK: - Scan Button
-                    NavigationLink(destination: ContentView()) {
-                        Text("SCAN")
-                            .font(.custom("BebasNeue-Regular", size: 30))
-                            .frame(width: 150, height: 60)
-                            .foregroundColor(.white)
-                            .background(Color("grey"))
-                            .cornerRadius(10)
-                    }
-                    .padding(.top, 10)
-                    
-                    Spacer()
-                }
-            }
-        }
-    }
-}
-
-
-        // MARK: - Scan Item View
-        
-        func scanItem(
-            imageName: String,
-            title: String,
-            energy: String,
-            fat: String,
-            yada: String,
-            sodium: String,
-            other: String,
-            greenScore: Int,
-            borderColor: Color
-        ) -> some View {
-            
-            VStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: 10) {
-                    Image(imageName)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 100)
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(borderColor, lineWidth: 2))
-                    
-                    Text(title)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                    
-                    HStack {
-                        Text("Energy: \(energy)")
-                        Spacer()
-                        Text("Fat: \(fat)")
-                    }
-                    .foregroundColor(.white)
-                    
-                    HStack {
-                        Text("Yada: \(yada)")
-                        Spacer()
-                        Text("Sodium: \(sodium)")
-                    }
-                    .foregroundColor(.white)
-                    
-                    Text("Other: \(other)")
-                        .foregroundColor(.white)
-                }
-                .padding()
-                .background(Color("grey"))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 15)
-                        .stroke(borderColor, lineWidth: 4)
-                )
-                .cornerRadius(15)
-                .frame(width: 320)
-                
-                // GREEN/RED Score Rectangle (attached to the box)
-                Text("GREEN SCORE: \(greenScore)")
-                    .font(.headline)
-                    .frame(width: 320, height: 35)
-                    .background(borderColor)
-                    .cornerRadius(8)
-                    .foregroundColor(.white)
-            }
-        }
-        */
 
 struct HomeView: View {
+    @EnvironmentObject var favoritesManager: FavoritesManager
+
     @State private var recentScans: [ScanItem] = []
 
-    @AppStorage("favoriteScans") private var favoriteScanData: Data = Data()
     @State private var favoriteScans: [ScanItem] = []
 
     var body: some View {
@@ -1333,7 +1047,7 @@ struct HomeView: View {
                     }
                     .toolbar {
                         ToolbarItem(placement: .navigationBarTrailing) {
-                            NavigationLink(destination: FavoritesView(favoriteScans: $favoriteScans)) {
+                            NavigationLink(destination: FavoritesView()) {
                                 Image("heart_icon")
                                     .resizable()
                                     .frame(width: 28, height: 28)
@@ -1381,7 +1095,6 @@ struct HomeView: View {
         }
         .onAppear {
             fetchRecentScans()
-            loadFavorites()
         }
     }
 
@@ -1421,11 +1134,12 @@ struct HomeView: View {
                         Spacer()
 
                         Button(action: {
-                            toggleFavorite(scan)
+                            favoritesManager.toggleFavorite(scan: scan)
                         }) {
-                            Image(systemName: isFavorite(scan) ? "heart.fill" : "heart")
-                                .foregroundColor(isFavorite(scan) ? .red : .white)
+                            Image(systemName: favoritesManager.isFavorite(scan) ? "heart.fill" : "heart")
+                                .foregroundColor(favoritesManager.isFavorite(scan) ? .red : .white)
                         }
+
                     }
 
                     Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
@@ -1464,33 +1178,6 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Favorites Handling
-    private func loadFavorites() {
-        if let decoded = try? JSONDecoder().decode([ScanItem].self, from: favoriteScanData) {
-            favoriteScans = decoded
-        } else {
-            favoriteScans = []
-        }
-    }
-
-    private func saveFavorites() {
-        if let encoded = try? JSONEncoder().encode(favoriteScans) {
-            favoriteScanData = encoded
-        }
-    }
-
-    private func toggleFavorite(_ scan: ScanItem) {
-        if let index = favoriteScans.firstIndex(where: { $0.id == scan.id }) {
-            favoriteScans.remove(at: index)
-        } else {
-            favoriteScans.append(scan)
-        }
-        saveFavorites()
-    }
-
-    private func isFavorite(_ scan: ScanItem) -> Bool {
-        favoriteScans.contains(where: { $0.id == scan.id })
-    }
 }
 
 
@@ -1809,7 +1496,7 @@ struct OFFNutriments: Codable {
 //MARK: - Favorites View
 
 struct FavoritesView: View {
-    @Binding var favoriteScans: [ScanItem]
+    @EnvironmentObject var favoritesManager: FavoritesManager
 
     var body: some View {
         ZStack {
@@ -1822,7 +1509,8 @@ struct FavoritesView: View {
                     .padding(.top, 20)
                     .padding(.horizontal)
 
-                if favoriteScans.isEmpty {
+                // ✅ Use favoritesManager.favorites instead of favoriteScans
+                if favoritesManager.favorites.isEmpty {
                     Text("No favorite items yet.")
                         .foregroundColor(.white)
                         .padding()
@@ -1831,7 +1519,7 @@ struct FavoritesView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: 15) {
-                            ForEach(favoriteScans) { scan in
+                            ForEach(favoritesManager.favorites) { scan in
                                 scanItem(scan: scan)
                             }
                         }
@@ -1844,7 +1532,6 @@ struct FavoritesView: View {
         }
     }
 
-    
     private func scanItem(scan: ScanItem) -> some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 15) {

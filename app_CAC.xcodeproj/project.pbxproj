@@ -16,6 +16,9 @@
 		4B0542132E629E0100940CA4 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 4B0542122E629E0100940CA4 /* FirebaseCore */; };
 		4B0542152E629E0100940CA4 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 4B0542142E629E0100940CA4 /* FirebaseFirestore */; };
 		4B0542172E629E0100940CA4 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 4B0542162E629E0100940CA4 /* FirebaseStorage */; };
+		4BD37D012E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4BD37D002E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist */; };
+		4BD37D022E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4BD37D002E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist */; };
+		4BD37D032E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4BD37D002E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +43,7 @@
 		4B2934462E4AF4A000927095 /* app_CAC.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = app_CAC.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B2934532E4AF4A400927095 /* app_CACTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = app_CACTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B29345D2E4AF4A400927095 /* app_CACUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = app_CACUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4BD37D002E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -142,6 +146,7 @@
 				4B2934602E4AF4A400927095 /* app_CACUITests */,
 				4B2934472E4AF4A000927095 /* Products */,
 				4B0542072E629B5100940CA4 /* GoogleService-Info.plist */,
+				4BD37D002E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -273,6 +278,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4B0542092E629B5100940CA4 /* GoogleService-Info.plist in Resources */,
+				4BD37D032E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -281,6 +287,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4B0542082E629B5100940CA4 /* GoogleService-Info.plist in Resources */,
+				4BD37D012E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -289,6 +296,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4B05420A2E629B5100940CA4 /* GoogleService-Info.plist in Resources */,
+				4BD37D022E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -456,9 +464,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = app_CAC/app_CAC.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = QSMG8QKZCT;
+				DEVELOPMENT_TEAM = 8TNQ3V38UM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "app-CAC-Info.plist";
@@ -475,7 +484,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "oopoo.app-CAC";
+				PRODUCT_BUNDLE_IDENTIFIER = "oopo.app-CAC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -488,9 +497,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = app_CAC/app_CAC.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = QSMG8QKZCT;
+				DEVELOPMENT_TEAM = 8TNQ3V38UM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "app-CAC-Info.plist";
@@ -507,7 +517,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "oopoo.app-CAC";
+				PRODUCT_BUNDLE_IDENTIFIER = "oopo.app-CAC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
