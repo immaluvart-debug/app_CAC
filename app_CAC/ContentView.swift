@@ -29,82 +29,6 @@ struct ScanItem: Identifiable, Codable {
     var processingScore: String?
 }
 
-
-
-/*
-final class FirestoreManager {
-    static let shared = FirestoreManager()
-    private let db = Firestore.firestore()
-    private let storage = Storage.storage()
-    
-    private init() {}
-    
-    // Save scan item to Firestore
-    func saveScan(for userID: String, scan: ScanItem, completion: ((Error?) -> Void)? = nil) {
-        //completion(nil) func saveScan(for userID: String, item: ScanItem, completion: @escaping (Error?) -> Void) {
-        let db = Firestore.firestore()
-        let data: [String: Any] = [
-            "id": scan.id,
-            "title": scan.title,
-            "energy": scan.energy,
-            "fat": scan.fat,
-            "carbohydrates": scan.carbohydrates,
-            "sugars": scan.sugars,
-            "fiber": scan.fiber,
-            "proteins": scan.proteins ?? 0,
-            "salt": scan.salt ?? 0,
-            "greenScore": scan.greenScore,
-            "imageURL": scan.imageURL,
-            "brand": scan.brand ?? "Unknown",
-            "origin": scan.origin ?? "Unknown",
-            "biodiversity": scan.biodiversity ?? "Unknown",
-            "processingScore": scan.processingScore ?? "N/A",
-            "labels": scan.labels ?? [],
-            "scannedAt": Timestamp(date: scan.scannedAt)
-        ]
-        db.collection("users").document(userID).collection("scans").document(scan.id).setData(data) { error in
-            completion?(error)
-        }
-    }
-
-    
-    // Fetch recent scans for a user
-    func fetchScans(for userID: String, completion: @escaping ([ScanItem]) -> Void) {
-        let db = Firestore.firestore()
-        db.collection("users").document(userID).collection("scans")
-            .order(by: "scannedAt", descending: true)
-            .getDocuments { snapshot, error in
-                guard let documents = snapshot?.documents, error == nil else {
-                    completion([])
-                    return
-                }
-                let scans = documents.compactMap { doc -> ScanItem? in
-                    let data = doc.data()
-                    return ScanItem(
-                        id: data["id"] as? String ?? UUID().uuidString,
-                        title: data["title"] as? String ?? "Unknown",
-                        energy: data["energy"] as? Double ?? 0,
-                        fat: data["fat"] as? Double ?? 0,
-                        carbohydrates: data["carbohydrates"] as? Double ?? 0,
-                        sugars: data["sugars"] as? Double ?? 0,
-                        fiber: data["fiber"] as? Double ?? 0,
-                        proteins: data["proteins"] as? Double ?? 0,
-                        salt: data["salt"] as? Double ?? 0,
-                        greenScore: data["greenScore"] as? String ?? "N/A",
-                        imageURL: data["imageURL"] as? String ?? "",
-                        scannedAt: (data["scannedAt"] as? Timestamp)?.dateValue() ?? Date(),
-                        brand: data["brand"] as? String,
-                        labels: data["labels"] as? [String],
-                        origin: data["origin"] as? String,
-                        biodiversity: data["biodiversity"] as? String,
-                        processingScore: data["processingScore"] as? String
-                        
-                      
-                    )
-                }
-                completion(scans)
-            }
-    }*/
 final class FirestoreManager {
     static let shared = FirestoreManager()
     private let db = Firestore.firestore()
@@ -1124,14 +1048,14 @@ struct GoalRow: View {
         .buttonStyle(PlainButtonStyle())
     }
 }
-
+/*
 struct HomeView: View {
     @EnvironmentObject var favoritesManager: FavoritesManager
 
     @State private var recentScans: [ScanItem] = []
 
     @State private var favoriteScans: [ScanItem] = []
-
+    @State private var isShowingScanner = false
     var body: some View {
         NavigationView {
             ZStack {
@@ -1200,19 +1124,21 @@ struct HomeView: View {
                     .padding(.horizontal, 10)
                     .frame(height: 400)
 
+
                     // MARK: - Scan Button
-                    NavigationLink(destination: ContentView()) {
-                        Text("SCAN")
+                    Button("SCAN") {
+                        isShowingScanner = true
+                    }
                             .font(.custom("BebasNeue-Regular", size: 30))
                             .frame(width: 180, height: 60)
                             .foregroundColor(.white)
                             .background(Color("grey"))
                             .cornerRadius(10)
-                    }
-                    .padding(.top, 10)
+
 
                     Spacer()
                 }
+                
             }
         }
         .onAppear {
@@ -1306,7 +1232,348 @@ struct HomeView: View {
     }
 
 }
+*/
 
+
+struct HomeView: View {
+    @EnvironmentObject var favoritesManager: FavoritesManager
+
+    @State private var recentScans: [ScanItem] = []
+    @State private var favoriteScans: [ScanItem] = []
+
+    // scanner states
+    @State private var isShowingScanner = false
+    @State private var greenScoreResult: String = ""
+    @State private var productImageURL: URL? = nil
+    @State private var nutritionInfo: String = ""
+
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color("ourgreen").ignoresSafeArea()
+
+                VStack(spacing: 15) {
+                    // MARK: - Top Logo & Recommended Bar
+                    VStack(spacing: 5) {
+                        Image("app_CAC icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 140, height: 140)
+
+                        HStack(spacing: 0) {
+                            NavigationLink(destination: RecommendedFoodsView(recentScans: recentScans)) {
+                                Text("RECOMMENDED")
+                                    .font(.custom("BebasNeue-Regular", size: 22))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                                    .background(Color("grey"))
+                            }
+
+                            Text("NEAR ME")
+                                .font(.custom("BebasNeue-Regular", size: 22))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(Color("grey"))
+                        }
+                        .cornerRadius(5)
+                        .padding(.horizontal, 15)
+                    }
+
+                    // MARK: - Recent Scans Section
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Recent Scans")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .padding(.leading, 15)
+                            .padding(.top, 5)
+
+                        ScrollView {
+                            VStack(spacing: 15) {
+                                ForEach(recentScans) { scan in
+                                    scanItem(scan: scan) // <- replace with your row view
+                                }
+                            }
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 10)
+                        }
+                    }
+                    .background(Color("lightestgreen"))
+                    .cornerRadius(15)
+                    .padding(.horizontal, 10)
+                    .frame(height: 400)
+
+                    // MARK: - Scan Button
+                    Button("SCAN") {
+                        isShowingScanner = true
+                    }
+                    .font(.custom("BebasNeue-Regular", size: 30))
+                    .frame(width: 180, height: 60)
+                    .foregroundColor(.white)
+                    .background(Color("grey"))
+                    .cornerRadius(10)
+                    .sheet(isPresented: $isShowingScanner) {
+                        BarcodeScannerView { barcode in
+                            isShowingScanner = false
+                            fetchGreenScore(for: barcode)
+                        }
+                    }
+
+                    Spacer()
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: FavoritesView()
+                        .environmentObject(favoritesManager)) {
+                        Image("heart_icon")
+                            .resizable()
+                            .frame(width: 28, height: 28)
+                    }
+                }
+            }
+        }
+        .onAppear {
+            if let user = Auth.auth().currentUser {
+                FirestoreManager.shared.fetchScans(for: user.uid) { scans in
+                    self.recentScans = scans
+                }
+            }
+        }
+    }
+    private func scanItem(scan: ScanItem) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 15) {
+                AsyncImage(url: URL(string: scan.imageURL)) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 80, height: 80)
+                    case .success(let image):
+                        image.resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    case .failure:
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
+                            .background(Color.gray.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(scan.title)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .lineLimit(2)
+
+                        Spacer()
+
+                        Button(action: {
+                            favoritesManager.toggleFavorite(scan: scan)
+                        }) {
+                            Image(systemName: favoritesManager.isFavorite(scan) ? "heart.fill" : "heart")
+                                .foregroundColor(favoritesManager.isFavorite(scan) ? .red : .white)
+                        }
+
+                    }
+
+                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
+                    Text("Fat: \(String(format: "%.2f", scan.fat)) g").foregroundColor(.white)
+                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g").foregroundColor(.white)
+                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g").foregroundColor(.white)
+                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g").foregroundColor(.white)
+                }
+            }
+            .padding()
+            .background(Color("grey"))
+            .cornerRadius(15)
+
+            Text("GREEN SCORE: \(scan.greenScore)")
+                .font(.custom("BebasNeue-Regular", size: 18))
+                .frame(width: 300, height: 35)
+                .background(
+                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
+                    ? Color.green
+                    : Color.red
+                )
+                .cornerRadius(8)
+                .foregroundColor(.white)
+                .padding(.top, 5)
+        }
+    }
+    
+    // MARK: - Fetch product data
+    func fetchGreenScore(for barcode: String) {
+        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json") else {
+            greenScoreResult = "Invalid barcode"
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            guard let data = data else {
+                DispatchQueue.main.async {
+                    greenScoreResult = "No data from server"
+                }
+                return
+            }
+
+            struct Nutriments: Codable {
+                let energy_kcal: Double?
+                let fat: Double?
+                let carbohydrates: Double?
+                let sugars: Double?
+                let fiber: Double?
+                let proteins: Double?
+                let salt: Double?
+            }
+
+            struct Product: Codable {
+                let product_name: String?
+                let ecoscore_grade: String?
+                let image_url: String?
+                let nutriments: Nutriments?
+                let brands: String?
+                let labels_tags: [String]?
+                let origins_tags: [String]?
+                let misc_tags: [String]?
+                let processing_score: String?
+            }
+
+            struct Response: Codable {
+                let product: Product?
+            }
+
+            if let decoded = try? JSONDecoder().decode(Response.self, from: data),
+               let product = decoded.product {
+
+                let scanItem = ScanItem(
+                    id: UUID().uuidString,
+                    title: product.product_name ?? "Unknown Product",
+                    energy: product.nutriments?.energy_kcal ?? 0,
+                    fat: product.nutriments?.fat ?? 0,
+                    carbohydrates: product.nutriments?.carbohydrates ?? 0,
+                    sugars: product.nutriments?.sugars ?? 0,
+                    fiber: product.nutriments?.fiber ?? 0,
+                    proteins: product.nutriments?.proteins ?? 0,
+                    salt: product.nutriments?.salt ?? 0,
+                    greenScore: product.ecoscore_grade?.uppercased() ?? "Unknown",
+                    imageURL: product.image_url ?? "",
+                    scannedAt: Date(),
+                    brand: product.brands ?? "Unknown",
+                    labels: product.labels_tags ?? [],
+                    origin: product.origins_tags?.first ?? "Unknown",
+                    biodiversity: product.misc_tags?.first ?? "Unknown",
+                    processingScore: product.processing_score ?? "N/A"
+                )
+
+                DispatchQueue.main.async {
+                    greenScoreResult = product.ecoscore_grade?.uppercased() ?? "Unknown"
+
+                    if let imageURLString = product.image_url,
+                       let url = URL(string: imageURLString) {
+                        productImageURL = url
+                    } else {
+                        productImageURL = nil
+                    }
+
+                    if let n = product.nutriments {
+                        nutritionInfo = """
+                        Energy: \(n.energy_kcal ?? 0) kcal
+                        Fat: \(n.fat ?? 0) g
+                        Carbs: \(n.carbohydrates ?? 0) g
+                        Sugars: \(n.sugars ?? 0) g
+                        Fiber: \(n.fiber ?? 0) g
+                        Proteins: \(n.proteins ?? 0) g
+                        Salt: \(n.salt ?? 0) g
+                        """
+                    } else {
+                        nutritionInfo = "No nutrition data available"
+                    }
+
+                    if let user = Auth.auth().currentUser {
+                        FirestoreManager.shared.saveScan(for: user.uid, scan: scanItem)
+                    }
+                }
+
+            } else {
+                DispatchQueue.main.async {
+                    greenScoreResult = "Error decoding data"
+                }
+            }
+        }.resume()
+    }
+
+    // MARK: - Barcode Scanner
+    struct BarcodeScannerView: UIViewControllerRepresentable {
+        var onBarcodeScanned: (String) -> Void
+
+        func makeUIViewController(context: Context) -> ScannerViewController {
+            let vc = ScannerViewController()
+            vc.onBarcodeScanned = onBarcodeScanned
+            return vc
+        }
+
+        func updateUIViewController(_ uiViewController: ScannerViewController, context: Context) {}
+    }
+
+    class ScannerViewController: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
+        var captureSession: AVCaptureSession!
+        var previewLayer: AVCaptureVideoPreviewLayer!
+        var onBarcodeScanned: ((String) -> Void)?
+
+        override func viewDidLoad() {
+            super.viewDidLoad()
+            view.backgroundColor = .green
+
+            captureSession = AVCaptureSession()
+            guard let videoCaptureDevice = AVCaptureDevice.default(for: .video),
+                  let videoInput = try? AVCaptureDeviceInput(device: videoCaptureDevice),
+                  captureSession.canAddInput(videoInput) else { return }
+            captureSession.addInput(videoInput)
+
+            let metadataOutput = AVCaptureMetadataOutput()
+            if captureSession.canAddOutput(metadataOutput) {
+                captureSession.addOutput(metadataOutput)
+                metadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
+                metadataOutput.metadataObjectTypes = [.ean8, .ean13, .upce, .code128, .code39, .code93, .qr]
+            }
+
+            previewLayer = AVCaptureVideoPreviewLayer(session: captureSession)
+            previewLayer.frame = view.layer.bounds
+            previewLayer.videoGravity = .resizeAspectFill
+            view.layer.addSublayer(previewLayer)
+
+            captureSession.startRunning()
+        }
+
+        func metadataOutput(_ output: AVCaptureMetadataOutput,
+                            didOutput metadataObjects: [AVMetadataObject],
+                            from connection: AVCaptureConnection) {
+            if let metadataObject = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+               let code = metadataObject.stringValue {
+                captureSession.stopRunning()
+                dismiss(animated: true) {
+                    self.onBarcodeScanned?(code)
+                }
+            }
+        }
+
+        override func viewWillDisappear(_ animated: Bool) {
+            super.viewWillDisappear(animated)
+            if captureSession.isRunning {
+                captureSession.stopRunning()
+            }
+        }
+    }
+}
 
 
      
@@ -1723,114 +1990,6 @@ struct FavoritesView: View {
         }
     }
 }
-
-/*
-struct FavoritesView: View {
-    @EnvironmentObject var favoritesManager: FavoritesManager
-    @State private var selectedScan: ScanItem? = nil
-    @State private var showDetails = false
-
-    var body: some View {
-        ZStack {
-            Color("ourgreen").ignoresSafeArea()
-
-            VStack(alignment: .leading, spacing: 15) {
-                Text("Favorites")
-                    .font(.custom("BebasNeue-Regular", size: 30))
-                    .foregroundColor(.white)
-                    .padding(.top, 20)
-                    .padding(.horizontal)
-
-                if favoritesManager.favorites.isEmpty {
-                    Text("No favorite items yet.")
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .font(.headline)
-                } else {
-                    ScrollView {
-                         VStack(spacing: 15) {
-                             ForEach(favoritesManager.favorites) { scan in
-                                 Button(action: { selectedScan = scan }) {
-                                     scanItem(scan: scan)
-                                 }
-                                 .buttonStyle(PlainButtonStyle())
-                             }
-                         }
-                     }
-                     .sheet(item: $selectedScan) { scan in
-                         ScanDetailsView(scan: scan, showDetails: $selectedScan)
-                     }
-                }
-
-                Spacer()
-            }
-        }
-        // ✅ Pop-up modal when clicking a scan item
-        .sheet(item: $selectedScan) { scan in
-            ScanDetailsView(scan: scan, showDetails: $showDetails)
-        }
-
-
-    }
-
-    // MARK: - Scan Item Card
-    private func scanItem(scan: ScanItem) -> some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 15) {
-                AsyncImage(url: URL(string: scan.imageURL)) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView().frame(width: 80, height: 80)
-                    case .success(let image):
-                        image.resizable()
-                            .scaledToFill()
-                            .frame(width: 80, height: 80)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    case .failure:
-                        Image(systemName: "photo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 80, height: 80)
-                            .background(Color.gray.opacity(0.3))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(scan.title)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .lineLimit(2)
-
-                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
-                    Text("Fat: \(String(format: "%.2f", scan.fat)) g").foregroundColor(.white)
-                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g").foregroundColor(.white)
-                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g").foregroundColor(.white)
-                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g").foregroundColor(.white)
-                }
-            }
-            .padding()
-            .background(Color("grey"))
-            .cornerRadius(15)
-
-            Text("GREEN SCORE: \(scan.greenScore)")
-                .font(.custom("BebasNeue-Regular", size: 18))
-                .frame(width: 300, height: 35)
-                .background(
-                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
-                    ? Color.green
-                    : Color.red
-                )
-                .cornerRadius(8)
-                .foregroundColor(.white)
-                .padding(.top, 5)
-        }
-    }
-}
-*/
 
 struct ScanDetailsView: View {
     let scan: ScanItem
