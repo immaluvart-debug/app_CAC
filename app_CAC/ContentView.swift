@@ -170,7 +170,7 @@ final class FirestoreManager {
     }
     
 
-
+/*
 
 // Mark: - ContentView
 struct ContentView: View {
@@ -492,7 +492,7 @@ struct ContentView: View {
             }
         }
     }
-}
+}*/
 
 //MARK: - WelcomeView
 struct WelcomeView: View {
@@ -1048,195 +1048,11 @@ struct GoalRow: View {
         .buttonStyle(PlainButtonStyle())
     }
 }
-/*
-struct HomeView: View {
-    @EnvironmentObject var favoritesManager: FavoritesManager
-
-    @State private var recentScans: [ScanItem] = []
-
-    @State private var favoriteScans: [ScanItem] = []
-    @State private var isShowingScanner = false
-    var body: some View {
-        NavigationView {
-            ZStack {
-                Color("ourgreen").ignoresSafeArea()
-
-                VStack(spacing: 15) {
-                    // MARK: - Top Logo & Recommended Bar
-                    VStack(spacing: 5) {
-                        Image("app_CAC icon")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 140, height: 140)
-
-                        HStack(spacing: 0) {
-                            NavigationLink(destination: RecommendedFoodsView(recentScans: recentScans)) {
-                                Text("RECOMMENDED")
-                                    .font(.custom("BebasNeue-Regular", size: 22))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
-                                    .background(Color("grey"))
-                            }
-
-                            Text("NEAR ME")
-                                .font(.custom("BebasNeue-Regular", size: 22))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
-                                .background(Color("grey"))
-                        }
-                        .cornerRadius(5)
-                        .padding(.horizontal, 15)
-                    }
-                    .toolbar {
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            NavigationLink(destination: FavoritesView()
-                                            .environmentObject(favoritesManager)) { // <-- pass it explicitly
-                                Image("heart_icon")
-                                    .resizable()
-                                    .frame(width: 28, height: 28)
-                            }
-                        }
-                    }
-
-
-                    // MARK: - Recent Scans Section
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Recent Scans")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .padding(.leading, 15)
-                            .padding(.top, 5)
-
-                        ScrollView {
-                            VStack(spacing: 15) {
-                                ForEach(recentScans) { scan in
-                                    scanItem(scan: scan)
-                                }
-                            }
-                            .padding(.horizontal, 15)
-                            .padding(.vertical, 10)
-                        }
-                    }
-                    .background(Color("lightestgreen"))
-                    .cornerRadius(15)
-                    .padding(.horizontal, 10)
-                    .frame(height: 400)
-
-
-                    // MARK: - Scan Button
-                    Button("SCAN") {
-                        isShowingScanner = true
-                    }
-                            .font(.custom("BebasNeue-Regular", size: 30))
-                            .frame(width: 180, height: 60)
-                            .foregroundColor(.white)
-                            .background(Color("grey"))
-                            .cornerRadius(10)
-
-
-                    Spacer()
-                }
-                
-            }
-        }
-        .onAppear {
-            if let user = Auth.auth().currentUser {
-                FirestoreManager.shared.fetchScans(for: user.uid) { scans in
-                    self.recentScans = scans
-                }
-            }
-        }
-
-    }
-
-    // MARK: - Scan Item View
-    private func scanItem(scan: ScanItem) -> some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 15) {
-                AsyncImage(url: URL(string: scan.imageURL)) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                            .frame(width: 80, height: 80)
-                    case .success(let image):
-                        image.resizable()
-                            .scaledToFill()
-                            .frame(width: 80, height: 80)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    case .failure:
-                        Image(systemName: "photo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 80, height: 80)
-                            .background(Color.gray.opacity(0.3))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(scan.title)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .lineLimit(2)
-
-                        Spacer()
-
-                        Button(action: {
-                            favoritesManager.toggleFavorite(scan: scan)
-                        }) {
-                            Image(systemName: favoritesManager.isFavorite(scan) ? "heart.fill" : "heart")
-                                .foregroundColor(favoritesManager.isFavorite(scan) ? .red : .white)
-                        }
-
-                    }
-
-                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
-                    Text("Fat: \(String(format: "%.2f", scan.fat)) g").foregroundColor(.white)
-                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g").foregroundColor(.white)
-                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g").foregroundColor(.white)
-                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g").foregroundColor(.white)
-                }
-            }
-            .padding()
-            .background(Color("grey"))
-            .cornerRadius(15)
-
-            Text("GREEN SCORE: \(scan.greenScore)")
-                .font(.custom("BebasNeue-Regular", size: 18))
-                .frame(width: 300, height: 35)
-                .background(
-                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
-                    ? Color.green
-                    : Color.red
-                )
-                .cornerRadius(8)
-                .foregroundColor(.white)
-                .padding(.top, 5)
-        }
-    }
-
-    // MARK: - Fetch Recent Scans
-    private func fetchRecentScans() {
-        if let user = Auth.auth().currentUser {
-            FirestoreManager.shared.fetchScans(for: user.uid) { scans in
-                DispatchQueue.main.async {
-                    self.recentScans = scans
-                }
-            }
-        }
-    }
-
-}
-*/
 
 
 struct HomeView: View {
     @EnvironmentObject var favoritesManager: FavoritesManager
+    @State private var selectedScan: ScanItem? = nil
 
     @State private var recentScans: [ScanItem] = []
     @State private var favoriteScans: [ScanItem] = []
@@ -1292,8 +1108,14 @@ struct HomeView: View {
                         ScrollView {
                             VStack(spacing: 15) {
                                 ForEach(recentScans) { scan in
-                                    scanItem(scan: scan) // <- replace with your row view
+                                    Button(action: {
+                                        selectedScan = scan
+                                    }) {
+                                        scanItem(scan: scan)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
                                 }
+
                             }
                             .padding(.horizontal, 15)
                             .padding(.vertical, 10)
@@ -1337,10 +1159,14 @@ struct HomeView: View {
         .onAppear {
             if let user = Auth.auth().currentUser {
                 FirestoreManager.shared.fetchScans(for: user.uid) { scans in
-                    self.recentScans = scans
+                    self.recentScans = scans.sorted { $0.scannedAt > $1.scannedAt }
                 }
             }
         }
+        .sheet(item: $selectedScan) { scan in
+        ScanDetailsView(scan: scan)
+            .environmentObject(favoritesManager)
+    }
     }
     private func scanItem(scan: ScanItem) -> some View {
         VStack(spacing: 0) {
@@ -1409,6 +1235,7 @@ struct HomeView: View {
                 .padding(.top, 5)
         }
     }
+        
     
     // MARK: - Fetch product data
     func fetchGreenScore(for barcode: String) {
@@ -1572,7 +1399,10 @@ struct HomeView: View {
                 captureSession.stopRunning()
             }
         }
+            
     }
+    
+
 }
 
 
@@ -1692,6 +1522,8 @@ final class FirebaseAuthManager {
 struct RecommendedFoodsView: View {
     @State private var recommendedFoods: [ScanItem] = []
     @State private var isLoading = true
+    @State private var selectedScan: ScanItem? = nil
+    @EnvironmentObject var favoritesManager: FavoritesManager
 
     var recentScans: [ScanItem]
 
@@ -1719,8 +1551,15 @@ struct RecommendedFoodsView: View {
                     ScrollView {
                         VStack(spacing: 15) {
                             ForEach(recommendedFoods) { food in
-                                scanItem(scan: food)
+                                Button(action: {
+                                    selectedScan = food
+                                }) {
+                                    scanItem(scan: food)
+                                }
+                                .buttonStyle(PlainButtonStyle())
                             }
+
+
                         }
                         .padding(.horizontal)
                     }
@@ -1729,8 +1568,16 @@ struct RecommendedFoodsView: View {
                 Spacer()
             }
         }
+        .sheet(item: $selectedScan) { scan in
+            ScanDetailsView(scan: scan)
+                .environmentObject(favoritesManager) // ✅ Pass it in
+        }
+
         .onAppear(perform: fetchRecommendedFoods)
+        
+
     }
+    
 
     private func fetchRecommendedFoods() {
         // Extract keywords (e.g., titles from recent scans)
@@ -1990,17 +1837,28 @@ struct FavoritesView: View {
         }
     }
 }
-
 struct ScanDetailsView: View {
     let scan: ScanItem
     @State private var selectedTab = 0
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var favoritesManager: FavoritesManager
 
     var body: some View {
         VStack(spacing: 0) {
-            // Close button
+            // Top bar with Close + Heart
             HStack {
+                Button(action: {
+                    favoritesManager.toggleFavorite(scan: scan)
+                }) {
+                    Image(systemName: favoritesManager.isFavorite(scan) ? "heart.fill" : "heart")
+                        .resizable()
+                        .frame(width: 26, height: 24)
+                        .foregroundColor(favoritesManager.isFavorite(scan) ? .red : .gray)
+                        .padding()
+                }
+
                 Spacer()
+
                 Button(action: { dismiss() }) {
                     Image(systemName: "xmark.circle.fill")
                         .resizable()
@@ -2033,11 +1891,6 @@ struct ScanDetailsView: View {
                             : Color.red
                         )
                         .cornerRadius(10)
-
-                  //  Text("Allergens: \(scan.allergens ?? "Unknown")")
-                       // .font(.headline)
-                      //  .foregroundColor(.black)
-                      //  .multilineTextAlignment(.center)
 
                     VStack(spacing: 10) {
                         nutritionRow("Energy", "\(String(format: "%.2f", scan.energy)) kcal")
