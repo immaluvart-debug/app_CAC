@@ -786,15 +786,21 @@ struct HomeView: View {
 
                         ScrollView {
                             VStack(spacing: 15) {
-                                ForEach(recentScans) { scan in
-                                    Button(action: {
-                                        selectedScan = scan
-                                    }) {
-                                        scanItem(scan: scan)
+                                if recentScans.isEmpty {
+                                    Text("No recent scans yet")
+                                        .foregroundColor(.gray)
+                                        .frame(maxWidth: .infinity, minHeight: 300) // keeps thickness
+                                        .multilineTextAlignment(.center)
+                                } else {
+                                    ForEach(recentScans) { scan in
+                                        Button(action: {
+                                            selectedScan = scan
+                                        }) {
+                                            scanItem(scan: scan)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
                                     }
-                                    .buttonStyle(PlainButtonStyle())
                                 }
-
                             }
                             .padding(.horizontal, 15)
                             .padding(.vertical, 10)
@@ -804,6 +810,7 @@ struct HomeView: View {
                     .cornerRadius(15)
                     .padding(.horizontal, 10)
                     .frame(height: 400)
+
 
                     // MARK: - Scan Button
                     Button("SCAN") {
