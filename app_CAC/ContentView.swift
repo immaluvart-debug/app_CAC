@@ -186,7 +186,10 @@ struct WelcomeView: View {
         NavigationStack {
             ZStack {
                 Color.ourgreen.ignoresSafeArea()
-                
+                Image("bg-sky-tree")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
                 VStack(spacing: 20) {
                     Image("app_CAC icon")
                         .resizable()
@@ -197,8 +200,9 @@ struct WelcomeView: View {
                     
                     ZStack {
                         RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.lightestgreen)
+                            .fill(Color.ourgreen)
                             .frame(width: 345, height: 420)
+                            .border(Color("blue"))
                         
                         VStack(spacing: 14) {
                             HStack(spacing: 16) {
@@ -743,6 +747,10 @@ struct HomeView: View {
         NavigationView {
             ZStack {
                 Color("ourgreen").ignoresSafeArea()
+                Image("bg-shade-leaf")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
 
                 VStack(spacing: 15) {
                     // MARK: - Top Logo & Recommended Bar
@@ -1528,10 +1536,16 @@ struct ScanDetailsView: View {
     @State private var selectedTab = 0
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var favoritesManager: FavoritesManager
-
+    
+    // Helper: main Nutri-Score color
+    private var nutriColor: Color {
+        (scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B")
+        ? .green : .red
+    }
+    
     var body: some View {
         VStack(spacing: 0) {
-            // Top bar with Close + Heart
+            // --- Top bar with Close + Heart ---
             HStack {
                 Button(action: {
                     favoritesManager.toggleFavorite(scan: scan)
@@ -1542,9 +1556,9 @@ struct ScanDetailsView: View {
                         .foregroundColor(favoritesManager.isFavorite(scan) ? .red : .gray)
                         .padding()
                 }
-
+                
                 Spacer()
-
+                
                 Button(action: { dismiss() }) {
                     Image(systemName: "xmark.circle.fill")
                         .resizable()
@@ -1553,102 +1567,154 @@ struct ScanDetailsView: View {
                         .padding()
                 }
             }
-
-            // Tabs
-            Picker("", selection: $selectedTab) {
-                Text("Nutrition Info").tag(0)
-                Text("Product Info").tag(1)
-            }
-            .pickerStyle(SegmentedPickerStyle())
-            .padding(.horizontal, 20)
-            .padding(.bottom, 15)
-
-            TabView(selection: $selectedTab) {
-                // Nutrition Info Tab
-                VStack(spacing: 15) {
-                    Text("Nutri-Score: \(scan.greenScore)")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
-                            ? Color.green
-                            : Color.red
-                        )
-                        .cornerRadius(10)
-
-                    VStack(spacing: 10) {
-                        nutritionRow("Energy", "\(String(format: "%.2f", scan.energy)) kcal")
-                        nutritionRow("Fat", "\(String(format: "%.2f", scan.fat)) g")
-                        nutritionRow("Carbohydrates", "\(String(format: "%.2f", scan.carbohydrates)) g")
-                        nutritionRow("Sugars", "\(String(format: "%.2f", scan.sugars)) g")
-                        nutritionRow("Fiber", "\(String(format: "%.2f", scan.fiber)) g")
-                        nutritionRow("Proteins", "\(String(format: "%.2f", scan.proteins ?? 0)) g")
+            
+            // --- Always visible content (title, image, Nutri-Score) ---
+            VStack(spacing: 12) {
+                // Food name
+                Text(scan.title ?? "Unknown Item")
+                    .font(.custom("Quicksand-Regular", size: 28))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 26)
+                // Food image
+                AsyncImage(url: URL(string: scan.imageURL)) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .frame(width: UIScreen.main.bounds.width / 4,
+                                   height: UIScreen.main.bounds.width / 4)
+                    case .success(let image):
+                        image.resizable()
+                            .scaledToFill()
+                            .frame(width: UIScreen.main.bounds.width / 4,
+                                   height: UIScreen.main.bounds.width / 4)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    case .failure:
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: UIScreen.main.bounds.width / 4,
+                                   height: UIScreen.main.bounds.width / 4)
+                            .background(Color.gray.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                    @unknown default:
+                        EmptyView()
                     }
-                    .padding()
                 }
-                .tag(0)
-
-                // Product Info Tab
-                ScrollView {
-                    VStack(spacing: 15) {
-                        Text("Brand: \(scan.brand ?? "Unknown")")
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
-
-                        if let labels = scan.labels, !labels.isEmpty {
-                            Text("Labels, Certifications & Awards:")
+                .padding(.bottom, 26) // space before banner
+                
+                // Nutri-Score banner
+                Text("Green score: \(scan.greenScore)")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(nutriColor)
+                    .cornerRadius(10)
+                    .overlay( // 👈 White outline
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.white, lineWidth: 2)
+                    )
+                    .padding(.horizontal, 20)
+            }
+            .padding(.bottom, 10)
+            
+            // --- Expandable content ---
+            VStack(spacing: 0) {
+                Picker("", selection: $selectedTab) {
+                    Text("Nutrition Info").tag(0)
+                    Text("Product Info").tag(1)
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding(.horizontal, 20)
+                .padding(.bottom, 10)
+                
+                TabView(selection: $selectedTab) {
+                    // Nutrition Info Tab
+                    ScrollView {
+                        VStack(spacing: 10) {
+                            nutritionRow("Energy", "\(String(format: "%.2f", scan.energy)) kcal")
+                            nutritionRow("Fat", "\(String(format: "%.2f", scan.fat)) g")
+                            nutritionRow("Carbohydrates", "\(String(format: "%.2f", scan.carbohydrates)) g")
+                            nutritionRow("Sugars", "\(String(format: "%.2f", scan.sugars)) g")
+                            nutritionRow("Fiber", "\(String(format: "%.2f", scan.fiber)) g")
+                            nutritionRow("Proteins", "\(String(format: "%.2f", scan.proteins ?? 0)) g")
+                        }
+                        .padding()
+                    }
+                    .tag(0)
+                    
+                    // Product Info Tab
+                    ScrollView {
+                        VStack(spacing: 15) {
+                            Text("Brand: \(scan.brand ?? "Unknown")")
                                 .font(.headline)
                                 .multilineTextAlignment(.center)
-
-                            ForEach(labels, id: \.self) { label in
-                                if let url = URL(string: label) {
-                                    AsyncImage(url: url) { phase in
-                                        switch phase {
-                                        case .empty:
-                                            ProgressView()
-                                        case .success(let image):
-                                            image.resizable()
-                                                .scaledToFit()
-                                                .frame(height: 50)
-                                        case .failure:
-                                            Image(systemName: "tag")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(height: 40)
-                                                .foregroundColor(.gray)
-                                        @unknown default:
-                                            EmptyView()
+                            
+                            if let labels = scan.labels, !labels.isEmpty {
+                                Text("Labels, Certifications & Awards:")
+                                    .font(.headline)
+                                    .multilineTextAlignment(.center)
+                                
+                                ForEach(labels, id: \.self) { label in
+                                    if let url = URL(string: label) {
+                                        AsyncImage(url: url) { phase in
+                                            switch phase {
+                                            case .empty:
+                                                ProgressView()
+                                            case .success(let image):
+                                                image.resizable()
+                                                    .scaledToFit()
+                                                    .frame(height: 50)
+                                            case .failure:
+                                                Image(systemName: "tag")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(height: 40)
+                                                    .foregroundColor(.gray)
+                                            @unknown default:
+                                                EmptyView()
+                                            }
                                         }
                                     }
                                 }
+                            } else {
+                                Text("Labels: Unknown")
                             }
-                        } else {
-                            Text("Labels: Unknown")
+                            
+                            Text("Origin of Ingredients: \(scan.origin ?? "Unknown")")
+                                .font(.headline)
+                                .multilineTextAlignment(.center)
+                            
+                            Text("Agricultural Biodiversity: \(scan.biodiversity ?? "Unknown")")
+                                .font(.headline)
+                                .multilineTextAlignment(.center)
+                            
+                            Text("Food Processing Score: \(scan.processingScore ?? "N/A")")
+                                .font(.headline)
+                                .multilineTextAlignment(.center)
                         }
-
-                        Text("Origin of Ingredients: \(scan.origin ?? "Unknown")")
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
-
-                        Text("Agricultural Biodiversity: \(scan.biodiversity ?? "Unknown")")
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
-
-                        Text("Food Processing Score: \(scan.processingScore ?? "N/A")")
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
+                        .padding()
                     }
-                    .padding()
+                    .tag(1)
                 }
-                .tag(1)
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
         }
-        .presentationDetents([.medium, .large])
+        // 👇 Apply lighter Nutri-Score tint background
+        /*.background(
+            (scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
+                ? Color.green
+                : Color.red
+            )*/
+        .background(Image("bg-leaf").resizable().scaledToFill())
+        .ignoresSafeArea()
+           // .opacity(0.3)   // 👈 tweak this value (0.1 → 0.3 looks good)
+            .ignoresSafeArea()
+        
     }
-
+    
+    
     private func nutritionRow(_ label: String, _ value: String) -> some View {
         HStack {
             Text(label)
@@ -1661,3 +1727,5 @@ struct ScanDetailsView: View {
         .padding(.horizontal, 20)
     }
 }
+
+
