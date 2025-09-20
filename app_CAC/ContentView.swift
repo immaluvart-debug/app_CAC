@@ -743,11 +743,24 @@ struct HomeView: View {
     @State private var productImageURL: URL? = nil
     @State private var nutritionInfo: String = ""
 
+    // search states
+    @State private var isSearching = false
+    @State private var searchText = ""
+
+    // computed: show filtered scans if searching
+    private var displayedScans: [ScanItem] {
+        if isSearching && !searchText.isEmpty {
+            return recentScans.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        } else {
+            return recentScans
+        }
+    }
+
     var body: some View {
         NavigationView {
             ZStack {
                 Color("ourgreen").ignoresSafeArea()
-                Image("bg-shade-leaf")
+                Image("bg-leaves")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
@@ -778,7 +791,6 @@ struct HomeView: View {
                                     .padding(.vertical, 8)
                                     .background(Color("grey"))
                             }
-
                         }
                         .cornerRadius(5)
                         .padding(.horizontal, 15)
@@ -786,21 +798,54 @@ struct HomeView: View {
 
                     // MARK: - Recent Scans Section
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Recent Scans")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                            .padding(.leading, 15)
-                            .padding(.top, 5)
+                        HStack {
+                            Text("Recent Scans")
+                                .font(.title2)
+                                .fontWeight(.bold)
+
+                            Spacer()
+
+                            HStack {
+                                if isSearching {
+                                    TextField("Search scans...", text: $searchText, onCommit: {
+                                        // pressing enter triggers search
+                                        // (already handled by displayedScans)
+                                    })
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(maxWidth: 200) // adjust width
+                                    .transition(.move(edge: .trailing))
+                                }
+
+                                Button(action: {
+                                    withAnimation {
+                                        if isSearching && searchText.isEmpty == false {
+                                            // if already searching with text, pressing again re-filters
+                                            // (displayedScans already updates automatically)
+                                        }
+                                        isSearching.toggle()
+                                        if !isSearching { searchText = "" } // reset if closing search
+                                    }
+                                }) {
+                                    Image(systemName: "magnifyingglass.circle")
+                                        .resizable()
+                                        .frame(width: 27, height: 27)
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                        }
+                        .padding(.leading, 15)
+                        .padding(.trailing, 15)
+                        .padding(.top, 5)
 
                         ScrollView {
                             VStack(spacing: 15) {
-                                if recentScans.isEmpty {
-                                    Text("No recent scans yet")
+                                if displayedScans.isEmpty {
+                                    Text("No recent scans found")
                                         .foregroundColor(.gray)
-                                        .frame(maxWidth: .infinity, minHeight: 300) // keeps thickness
+                                        .frame(maxWidth: .infinity, minHeight: 300)
                                         .multilineTextAlignment(.center)
                                 } else {
-                                    ForEach(recentScans) { scan in
+                                    ForEach(displayedScans) { scan in
                                         Button(action: {
                                             selectedScan = scan
                                         }) {
@@ -818,7 +863,6 @@ struct HomeView: View {
                     .cornerRadius(15)
                     .padding(.horizontal, 10)
                     .frame(height: 400)
-
 
                     // MARK: - Scan Button
                     Button("SCAN") {
@@ -858,10 +902,11 @@ struct HomeView: View {
             }
         }
         .sheet(item: $selectedScan) { scan in
-        ScanDetailsView(scan: scan)
-            .environmentObject(favoritesManager)
+            ScanDetailsView(scan: scan)
+                .environmentObject(favoritesManager)
+        }
     }
-    }
+
     private func scanItem(scan: ScanItem) -> some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 15) {
@@ -1212,7 +1257,196 @@ final class FirebaseAuthManager {
 }
 
 //MARK: - Recommended Foods View
+// MARK: - Recommended Foods View (fixed & with filters)
+struct RecommendedFoodsView: View {
+    @State private var recommendedFoods: [ScanItem] = []
+    @State private var isLoading = true
+    @State private var selectedScan: ScanItem? = nil
+    @EnvironmentObject var favoritesManager: FavoritesManager
 
+    var recentScans: [ScanItem]
+
+    // Filter states
+    @State private var filterGreenScore = false
+    @State private var filterNutritional = false
+    @State private var filterCalories = false
+
+    // Thresholds (tweak if you like)
+    private let nutritionalFiberThreshold: Double = 3.0
+    private let nutritionalEnergyUpper: Double = 300.0
+    private let caloriesUpper: Double = 200.0
+
+    var body: some View {
+        ZStack {
+            Color("ourgreen").ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: 15) {
+                Text("Your Recommended Foods")
+                    .font(.custom("BebasNeue-Regular", size: 30))
+                    .foregroundColor(.white)
+                    .padding(.top, 20)
+                    .padding(.horizontal)
+
+                if isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if filteredFoods.isEmpty {
+                    Text("No recommendations found.")
+                        .foregroundColor(.white)
+                        .padding()
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 15) {
+                            ForEach(filteredFoods) { food in
+                                Button(action: {
+                                    selectedScan = food
+                                }) {
+                                    scanItem(scan: food)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+
+                // --- Filters checklist at bottom ---
+                VStack(alignment: .leading, spacing: 8) {
+                    Divider().background(Color.white.opacity(0.2))
+                    Text("Filters")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .padding(.top, 6)
+
+                    Toggle(isOn: $filterGreenScore) {
+                        Text("Green-Score").foregroundColor(.white)
+                    }
+                    Toggle(isOn: $filterNutritional) {
+                        Text("Nutritional value").foregroundColor(.white)
+                    }
+                    Toggle(isOn: $filterCalories) {
+                        Text("Calories").foregroundColor(.white)
+                    }
+
+                    // placeholders for future options (disabled as requested)
+                    Toggle("My Goals ", isOn: .constant(false))
+                        //.disabled(true)
+                        .foregroundColor(.white.opacity(0.7))
+
+                    HStack {
+                        Toggle("Custom:", isOn: .constant(false))
+                            .disabled(true)
+                            .foregroundColor(.white.opacity(0.7))
+                        TextField("Add custom filter (disabled)", text: .constant(""))
+                            .disabled(true)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                    }
+                }
+                .padding()
+            }
+        }
+        .sheet(item: $selectedScan) { scan in
+            ScanDetailsView(scan: scan)
+                .environmentObject(favoritesManager)
+        }
+        .onAppear(perform: fetchRecommendedFoods)
+    }
+
+    // Computed property that applies the selected filters
+    // Computed property that applies the selected filters
+    private var filteredFoods: [ScanItem] {
+        recommendedFoods.filter { scan in
+            var keep = true
+
+            // Only apply Green Score filter (A / B) toggle
+            if filterGreenScore {
+                let eco = scan.greenScore.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                keep = keep && (eco == "A" || eco == "B")
+            }
+
+            return keep
+        }
+    }
+
+
+    // Fetch recommendations using your existing APIManager (do NOT pre-filter here;
+    // keep the full list so toggles can filter locally)
+    private func fetchRecommendedFoods() {
+        let keywords = recentScans.map { $0.title }
+        APIManager.shared.fetchRecommendations(basedOn: keywords) { foods in
+            DispatchQueue.main.async {
+                self.recommendedFoods = foods   // keep all results so filters can be applied
+                self.isLoading = false
+            }
+        }
+    }
+
+    // Reuse your scanItem view layout (keeps UI consistent with the rest of the app)
+    private func scanItem(scan: ScanItem) -> some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 15) {
+                AsyncImage(url: URL(string: scan.imageURL)) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView().frame(width: 80, height: 80)
+                    case .success(let image):
+                        image.resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    case .failure:
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
+                            .background(Color.gray.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(scan.title)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .lineLimit(2)
+
+                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal")
+                        .foregroundColor(.white)
+                    Text("Fat: \(String(format: "%.2f", scan.fat)) g")
+                        .foregroundColor(.white)
+                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g")
+                        .foregroundColor(.white)
+                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g")
+                        .foregroundColor(.white)
+                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g")
+                        .foregroundColor(.white)
+
+                }
+            }
+            .padding()
+            .background(Color("grey"))
+            .cornerRadius(15)
+
+            Text("GREEN SCORE: \(scan.greenScore)")
+                .font(.custom("BebasNeue-Regular", size: 18))
+                .frame(width: 300, height: 35)
+                .background(
+                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
+                    ? Color.green
+                    : Color.red
+                )
+                .cornerRadius(8)
+                .foregroundColor(.white)
+                .padding(.top, 5)
+        }
+    }
+}
+
+/*
 struct RecommendedFoodsView: View {
     @State private var recommendedFoods: [ScanItem] = []
     @State private var isLoading = true
@@ -1346,7 +1580,7 @@ struct RecommendedFoodsView: View {
                 .padding(.top, 5)
         }
     }
-}
+}*/
 
 //MARK: - Recommended Food Search
 final class APIManager {
