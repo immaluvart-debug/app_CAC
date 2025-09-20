@@ -169,7 +169,207 @@ final class FirestoreManager {
         }
     }
     
-
+//
+////MARK: - WelcomeView
+//struct WelcomeView: View {
+//    @State private var isLogin = true
+//    @State private var email = ""
+//    @State private var password = ""
+//    // navigation states
+//    @State private var navigateToHome = false
+//    @State private var navigateToPreferences = false
+//    // ui states
+//    @State private var errorMessage = ""
+//    @State private var isLoading = false
+//    
+//    var body: some View {
+//        NavigationStack {
+//            ZStack {
+//                Color.ourgreen.ignoresSafeArea()
+//                Image("bg-sky-tree")
+//                .resizable()
+//                .scaledToFill()
+//                .ignoresSafeArea()
+//                VStack(spacing: 20) {
+//                    Image("app_CAC icon")
+//                        .resizable()
+//                        .frame(width: 175, height: 175)
+//                    Text("welcome")
+//                        .font(.custom("Allura-Regular", size: 70))
+//                        .foregroundStyle(Color(.white))
+//                    
+//                    ZStack {
+//                        RoundedRectangle(cornerRadius: 20)
+//                            .fill(Color.ourgreen)
+//                            .frame(width: 345, height: 420)
+//                            .border(Color("blue"))
+//                        
+//                        VStack(spacing: 14) {
+//                            HStack(spacing: 16) {
+//                                Button {
+//                                    isLogin = true
+//                                    email = ""
+//                                    password = ""
+//                                    errorMessage = ""
+//                                } label: {
+//                                    Text("LOG IN")
+//                                        .font(.headline)
+//                                        .foregroundColor(.white)
+//                                        .padding(.vertical, 15)
+//                                        .padding(.horizontal, 20)
+//                                        .background(Color("darkestGrey"))
+//                                }
+//                                
+//                                Button {
+//                                    isLogin = false
+//                                    email = ""
+//                                    password = ""
+//                                    errorMessage = ""
+//                                } label: {
+//                                    Text("SIGN UP")
+//                                        .font(.headline)
+//                                        .foregroundColor(.white)
+//                                        .padding(.vertical, 15)
+//                                        .padding(.horizontal, 20)
+//                                        .background(Color("darkestGrey"))
+//                                }
+//                            }
+//                            
+//                            ZStack {
+//                                Rectangle()
+//                                    .fill(Color("darkestGrey"))
+//                                    .frame(width: 280, height: 260)
+//                                
+//                                VStack(alignment: .leading, spacing: 12) {
+//                                    if isLogin {
+//                                        Text("enter email:")
+//                                            .foregroundColor(.white)
+//                                        TextField("you@example.com", text: $email)
+//                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+//                                            .frame(width: 250)
+//                                            .autocapitalization(.none)
+//                                            .keyboardType(.emailAddress)
+//                                        
+//                                        Text("enter password:")
+//                                            .foregroundColor(.white)
+//                                        SecureField("Password", text: $password)
+//                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+//                                            .frame(width: 250)
+//                                        
+//                                        if !errorMessage.isEmpty {
+//                                            Text(errorMessage)
+//                                                .foregroundColor(.red)
+//                                                .font(.system(size: 14))
+//                                        }
+//                                        
+//                                        Button(action: loginTapped) {
+//                                            HStack {
+//                                                if isLoading {
+//                                                    ProgressView().scaleEffect(0.8)
+//                                                }
+//                                                Text("OK")
+//                                                    .font(.headline)
+//                                                    .foregroundColor(.white)
+//                                                    .padding()
+//                                                    .frame(width: 100)
+//                                                    .background(Color("grey"))
+//                                                    .cornerRadius(8)
+//                                            }
+//                                        }
+//                                        .disabled(email.isEmpty || password.isEmpty || isLoading)
+//                                        
+//                                    } else {
+//                                        Text("create email:")
+//                                            .foregroundColor(.white)
+//                                        TextField("you@example.com", text: $email)
+//                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+//                                            .frame(width: 250)
+//                                            .autocapitalization(.none)
+//                                            .keyboardType(.emailAddress)
+//                                        
+//                                        Text("create password:")
+//                                            .foregroundColor(.white)
+//                                        SecureField("Password", text: $password)
+//                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+//                                            .frame(width: 250)
+//                                        
+//                                        if !errorMessage.isEmpty {
+//                                            Text(errorMessage)
+//                                                .foregroundColor(.red)
+//                                                .font(.system(size: 14))
+//                                        }
+//                                        
+//                                        Button(action: signUpTapped) {
+//                                            HStack {
+//                                                if isLoading {
+//                                                    ProgressView().scaleEffect(0.8)
+//                                                }
+//                                                Text("OK")
+//                                                    .font(.headline)
+//                                                    .foregroundColor(.white)
+//                                                    .padding()
+//                                                    .frame(width: 100)
+//                                                    .background(Color("grey"))
+//                                                    .cornerRadius(8)
+//                                            }
+//                                        }
+//                                        .disabled(email.isEmpty || password.isEmpty || isLoading)
+//                                    }
+//                                    
+//                                    // Hidden NavigationLinks — triggered only on success
+//                                    NavigationLink(destination: HomeView(), isActive: $navigateToHome) { EmptyView() }
+//                                    NavigationLink(destination: PreferencesView(), isActive: $navigateToPreferences) { EmptyView() }
+//                                }
+//                                .padding()
+//                            }
+//                        }
+//                    }
+//                    .padding()
+//                }
+//            }
+//        }
+//        .ignoresSafeArea()
+//        .statusBarHidden(true)
+//        TransitionOverlay(show: $isTransitioning)
+//    }
+//    
+//
+//   // MARK: - Actions
+//   private func loginTapped() {
+//       errorMessage = ""
+//       isLoading = true
+//       FirebaseAuthManager.shared.login(email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+//                                        password: password) { result in
+//           isLoading = false
+//           switch result {
+//           case .success:
+//               errorMessage = ""
+//               navigateToHome = true
+//           case .failure(let error):
+//               errorMessage = error.localizedDescription
+//               navigateToHome = false
+//           }
+//       }
+//   }
+//
+//   private func signUpTapped() {
+//       errorMessage = ""
+//       isLoading = true
+//       FirebaseAuthManager.shared.signUp(email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+//                                         password: password) { result in
+//           isLoading = false
+//           switch result {
+//           case .success:
+//               errorMessage = ""
+//               navigateToPreferences = true
+//           case .failure(let error):
+//               errorMessage = error.localizedDescription
+//               navigateToPreferences = false
+//           }
+//       }
+//   }
+//}
+//
 //MARK: - WelcomeView
 struct WelcomeView: View {
     @State private var isLogin = true
@@ -181,15 +381,18 @@ struct WelcomeView: View {
     // ui states
     @State private var errorMessage = ""
     @State private var isLoading = false
-    
+    // transition state
+    @State private var isTransitioning = false
+
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.ourgreen.ignoresSafeArea()
                 Image("bg-sky-tree")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+
                 VStack(spacing: 20) {
                     Image("app_CAC icon")
                         .resizable()
@@ -197,13 +400,13 @@ struct WelcomeView: View {
                     Text("welcome")
                         .font(.custom("Allura-Regular", size: 70))
                         .foregroundStyle(Color(.white))
-                    
+
                     ZStack {
                         RoundedRectangle(cornerRadius: 20)
                             .fill(Color.ourgreen)
                             .frame(width: 345, height: 420)
                             .border(Color("blue"))
-                        
+
                         VStack(spacing: 14) {
                             HStack(spacing: 16) {
                                 Button {
@@ -219,7 +422,7 @@ struct WelcomeView: View {
                                         .padding(.horizontal, 20)
                                         .background(Color("darkestGrey"))
                                 }
-                                
+
                                 Button {
                                     isLogin = false
                                     email = ""
@@ -234,12 +437,12 @@ struct WelcomeView: View {
                                         .background(Color("darkestGrey"))
                                 }
                             }
-                            
+
                             ZStack {
                                 Rectangle()
                                     .fill(Color("darkestGrey"))
                                     .frame(width: 280, height: 260)
-                                
+
                                 VStack(alignment: .leading, spacing: 12) {
                                     if isLogin {
                                         Text("enter email:")
@@ -249,19 +452,19 @@ struct WelcomeView: View {
                                             .frame(width: 250)
                                             .autocapitalization(.none)
                                             .keyboardType(.emailAddress)
-                                        
+
                                         Text("enter password:")
                                             .foregroundColor(.white)
                                         SecureField("Password", text: $password)
                                             .textFieldStyle(RoundedBorderTextFieldStyle())
                                             .frame(width: 250)
-                                        
+
                                         if !errorMessage.isEmpty {
                                             Text(errorMessage)
                                                 .foregroundColor(.red)
                                                 .font(.system(size: 14))
                                         }
-                                        
+
                                         Button(action: loginTapped) {
                                             HStack {
                                                 if isLoading {
@@ -277,7 +480,7 @@ struct WelcomeView: View {
                                             }
                                         }
                                         .disabled(email.isEmpty || password.isEmpty || isLoading)
-                                        
+
                                     } else {
                                         Text("create email:")
                                             .foregroundColor(.white)
@@ -286,19 +489,19 @@ struct WelcomeView: View {
                                             .frame(width: 250)
                                             .autocapitalization(.none)
                                             .keyboardType(.emailAddress)
-                                        
+
                                         Text("create password:")
                                             .foregroundColor(.white)
                                         SecureField("Password", text: $password)
                                             .textFieldStyle(RoundedBorderTextFieldStyle())
                                             .frame(width: 250)
-                                        
+
                                         if !errorMessage.isEmpty {
                                             Text(errorMessage)
                                                 .foregroundColor(.red)
                                                 .font(.system(size: 14))
                                         }
-                                        
+
                                         Button(action: signUpTapped) {
                                             HStack {
                                                 if isLoading {
@@ -315,7 +518,7 @@ struct WelcomeView: View {
                                         }
                                         .disabled(email.isEmpty || password.isEmpty || isLoading)
                                     }
-                                    
+
                                     // Hidden NavigationLinks — triggered only on success
                                     NavigationLink(destination: HomeView(), isActive: $navigateToHome) { EmptyView() }
                                     NavigationLink(destination: PreferencesView(), isActive: $navigateToPreferences) { EmptyView() }
@@ -326,48 +529,67 @@ struct WelcomeView: View {
                     }
                     .padding()
                 }
+
+                // overlay goes above everything
+                //TransitionOverlay(show: $isTransitioning)
             }
         }
         .ignoresSafeArea()
         .statusBarHidden(true)
     }
 
-   // MARK: - Actions
-   private func loginTapped() {
-       errorMessage = ""
-       isLoading = true
-       FirebaseAuthManager.shared.login(email: email.trimmingCharacters(in: .whitespacesAndNewlines),
-                                        password: password) { result in
-           isLoading = false
-           switch result {
-           case .success:
-               errorMessage = ""
-               navigateToHome = true
-           case .failure(let error):
-               errorMessage = error.localizedDescription
-               navigateToHome = false
-           }
-       }
-   }
+    // MARK: - Actions
+    private func loginTapped() {
+        errorMessage = ""
+        isLoading = true
+        FirebaseAuthManager.shared.login(
+            email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+            password: password
+        ) { result in
+            isLoading = false
+            switch result {
+            case .success:
+                withAnimation {
+                    isTransitioning = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    errorMessage = ""
+                    navigateToHome = true
+                    isTransitioning = false
+                }
+            case .failure(let error):
+                errorMessage = error.localizedDescription
+                navigateToHome = false
+            }
+        }
+    }
 
-   private func signUpTapped() {
-       errorMessage = ""
-       isLoading = true
-       FirebaseAuthManager.shared.signUp(email: email.trimmingCharacters(in: .whitespacesAndNewlines),
-                                         password: password) { result in
-           isLoading = false
-           switch result {
-           case .success:
-               errorMessage = ""
-               navigateToPreferences = true
-           case .failure(let error):
-               errorMessage = error.localizedDescription
-               navigateToPreferences = false
-           }
-       }
-   }
+    private func signUpTapped() {
+        errorMessage = ""
+        isLoading = true
+        FirebaseAuthManager.shared.signUp(
+            email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+            password: password
+        ) { result in
+            isLoading = false
+            switch result {
+            case .success:
+                withAnimation {
+                    isTransitioning = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                    errorMessage = ""
+                    navigateToPreferences = true
+                    isTransitioning = false
+                }
+            case .failure(let error):
+                errorMessage = error.localizedDescription
+                navigateToPreferences = false
+            }
+        }
+    }
 }
-    
+
 
 
 
@@ -733,10 +955,11 @@ struct GoalRow: View {
 struct HomeView: View {
     @EnvironmentObject var favoritesManager: FavoritesManager
     @State private var selectedScan: ScanItem? = nil
+    @State private var showConfetti = false
 
     @State private var recentScans: [ScanItem] = []
     @State private var favoriteScans: [ScanItem] = []
-
+  //  @State private var animateHeart = false
     // scanner states
     @State private var isShowingScanner = false
     @State private var greenScoreResult: String = ""
@@ -746,6 +969,9 @@ struct HomeView: View {
     // search states
     @State private var isSearching = false
     @State private var searchText = ""
+
+    // overlay state
+    @State private var showOverlay = false
 
     // computed: show filtered scans if searching
     private var displayedScans: [ScanItem] {
@@ -757,144 +983,155 @@ struct HomeView: View {
     }
 
     var body: some View {
-        NavigationView {
-            ZStack {
-                Color("ourgreen").ignoresSafeArea()
-                Image("bg-leaves")
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea()
+        ZStack {
+            NavigationView {
+                ZStack {
+                    Color("ourgreen").ignoresSafeArea()
+                    Image("bg-leaves")
+                        .resizable()
+                        .scaledToFill()
+                        .ignoresSafeArea()
 
-                VStack(spacing: 15) {
-                    // MARK: - Top Logo & Recommended Bar
-                    VStack(spacing: 5) {
-                        Image("app_CAC icon")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 140, height: 140)
+                    VStack(spacing: 15) {
+                        // MARK: - Top Logo & Recommended Bar
+                        VStack(spacing: 5) {
+                            Image("app_CAC icon")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 140, height: 140)
 
-                        HStack(spacing: 0) {
-                            NavigationLink(destination: RecommendedFoodsView(recentScans: recentScans)) {
-                                Text("RECOMMENDED")
-                                    .font(.custom("BebasNeue-Regular", size: 22))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
-                                    .background(Color("grey"))
+                            HStack(spacing: 0) {
+                                NavigationLink(destination: RecommendedFoodsView(recentScans: recentScans)) {
+                                    Text("RECOMMENDED")
+                                        .font(.custom("BebasNeue-Regular", size: 22))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(Color("grey"))
+                                }
+
+                                NavigationLink(destination: NearbyProductsMapView()) {
+                                    Text("NEAR ME")
+                                        .font(.custom("BebasNeue-Regular", size: 22))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(Color("grey"))
+                                }
                             }
-
-                            NavigationLink(destination: NearbyProductsMapView()) {
-                                Text("NEAR ME")
-                                    .font(.custom("BebasNeue-Regular", size: 22))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 8)
-                                    .background(Color("grey"))
-                            }
+                            .cornerRadius(5)
+                            .padding(.horizontal, 15)
                         }
-                        .cornerRadius(5)
-                        .padding(.horizontal, 15)
-                    }
 
-                    // MARK: - Recent Scans Section
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text("Recent Scans")
-                                .font(.title2)
-                                .fontWeight(.bold)
-
-                            Spacer()
-
+                        // MARK: - Recent Scans Section
+                        VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                if isSearching {
-                                    TextField("Search scans...", text: $searchText, onCommit: {
-                                        // pressing enter triggers search
-                                        // (already handled by displayedScans)
-                                    })
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .frame(maxWidth: 200) // adjust width
-                                    .transition(.move(edge: .trailing))
-                                }
+                                Text("Recent Scans")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
 
-                                Button(action: {
-                                    withAnimation {
-                                        if isSearching && searchText.isEmpty == false {
-                                            // if already searching with text, pressing again re-filters
-                                            // (displayedScans already updates automatically)
-                                        }
-                                        isSearching.toggle()
-                                        if !isSearching { searchText = "" } // reset if closing search
+                                Spacer()
+
+                                HStack {
+                                    if isSearching {
+                                        TextField("Search scans...", text: $searchText)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                                            .frame(maxWidth: 200)
+                                            .transition(.move(edge: .trailing))
                                     }
-                                }) {
-                                    Image(systemName: "magnifyingglass.circle")
-                                        .resizable()
-                                        .frame(width: 27, height: 27)
-                                        .foregroundColor(.gray)
-                                }
-                            }
-                        }
-                        .padding(.leading, 15)
-                        .padding(.trailing, 15)
-                        .padding(.top, 5)
 
-                        ScrollView {
-                            VStack(spacing: 15) {
-                                if displayedScans.isEmpty {
-                                    Text("No recent scans found")
-                                        .foregroundColor(.gray)
-                                        .frame(maxWidth: .infinity, minHeight: 300)
-                                        .multilineTextAlignment(.center)
-                                } else {
-                                    ForEach(displayedScans) { scan in
-                                        Button(action: {
-                                            selectedScan = scan
-                                        }) {
-                                            scanItem(scan: scan)
+                                    Button(action: {
+                                        withAnimation {
+                                            isSearching.toggle()
+                                            if !isSearching { searchText = "" }
                                         }
-                                        .buttonStyle(PlainButtonStyle())
+                                    }) {
+                                        Image(systemName: "magnifyingglass.circle")
+                                            .resizable()
+                                            .frame(width: 27, height: 27)
+                                            .foregroundColor(.gray)
                                     }
                                 }
                             }
                             .padding(.horizontal, 15)
-                            .padding(.vertical, 10)
+                            .padding(.top, 5)
+
+                            ScrollView {
+                                VStack(spacing: 15) {
+                                    if displayedScans.isEmpty {
+                                        Text("No recent scans found")
+                                            .foregroundColor(.gray)
+                                            .frame(maxWidth: .infinity, minHeight: 300)
+                                            .multilineTextAlignment(.center)
+                                    } else {
+                                        ForEach(displayedScans) { scan in
+                                            Button(action: {
+                                                selectedScan = scan
+                                            }) {
+                                                ScanRowView(scan: scan)
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 15)
+                                .padding(.vertical, 10)
+                            }
+                        }
+                        .background(Color("lightestgreen"))
+                        .cornerRadius(15)
+                        .padding(.horizontal, 10)
+                        .frame(height: 400)
+
+                        // MARK: - Scan Button
+                        Button("SCAN") {
+                            isShowingScanner = true
+                        }
+                        .font(.custom("BebasNeue-Regular", size: 30))
+                        .frame(width: 180, height: 60)
+                        .foregroundColor(.white)
+                        .background(Color("grey"))
+                        .cornerRadius(10)
+                        .sheet(isPresented: $isShowingScanner) {
+                            BarcodeScannerView { barcode in
+                                isShowingScanner = false
+                                fetchGreenScore(for: barcode)
+                            }
+                        }
+
+                        Spacer()
+                    }
+                }
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        NavigationLink(destination: FavoritesView()
+                            .environmentObject(favoritesManager)) {
+                            Image("heart_icon")
+                                .resizable()
+                                .frame(width: 28, height: 28)
                         }
                     }
-                    .background(Color("lightestgreen"))
-                    .cornerRadius(15)
-                    .padding(.horizontal, 10)
-                    .frame(height: 400)
-
-                    // MARK: - Scan Button
-                    Button("SCAN") {
-                        isShowingScanner = true
-                    }
-                    .font(.custom("BebasNeue-Regular", size: 30))
-                    .frame(width: 180, height: 60)
-                    .foregroundColor(.white)
-                    .background(Color("grey"))
-                    .cornerRadius(10)
-                    .sheet(isPresented: $isShowingScanner) {
-                        BarcodeScannerView { barcode in
-                            isShowingScanner = false
-                            fetchGreenScore(for: barcode)
-                        }
-                    }
-
-                    Spacer()
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: FavoritesView()
-                        .environmentObject(favoritesManager)) {
-                        Image("heart_icon")
-                            .resizable()
-                            .frame(width: 28, height: 28)
-                    }
-                }
-            }
+            // Transition overlay sits above NavigationView
+            TransitionOverlay(show: $showOverlay)
+                .zIndex(5)
         }
+       
+
+        // ✅ Confetti sits ABOVE EVERYTHING (including sheets)
+        .overlay(
+            Group {
+                if showConfetti {
+                    ConfettiView()
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                        .zIndex(1000) // super high priority
+                }
+            }
+        )
         .onAppear {
+            showOverlay = true
             if let user = Auth.auth().currentUser {
                 FirestoreManager.shared.fetchScans(for: user.uid) { scans in
                     self.recentScans = scans.sorted { $0.scannedAt > $1.scannedAt }
@@ -905,10 +1142,14 @@ struct HomeView: View {
             ScanDetailsView(scan: scan)
                 .environmentObject(favoritesManager)
         }
+        .presentationDetents([.large])
     }
 
+  
+
     private func scanItem(scan: ScanItem) -> some View {
-        VStack(spacing: 0) {
+        @State var animateHeart = false
+        return VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 15) {
                 AsyncImage(url: URL(string: scan.imageURL)) { phase in
                     switch phase {
@@ -943,9 +1184,23 @@ struct HomeView: View {
 
                         Button(action: {
                             favoritesManager.toggleFavorite(scan: scan)
+                            triggerSuccessHaptic()
+
+                            // trigger animation
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                animateHeart = true
+                            }
+                            // reset after short delay
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                                animateHeart = false
+                            }
                         }) {
                             Image(systemName: favoritesManager.isFavorite(scan) ? "heart.fill" : "heart")
                                 .foregroundColor(favoritesManager.isFavorite(scan) ? .red : .white)
+                                .scaleEffect(animateHeart ? 2.7 : 1.0) // bounce bigger
+                                .shadow(color: animateHeart ? .red.opacity(0.7) : .clear,
+                                        radius: 15, x: 0, y: 0)       // glowing effect
+                                .animation(.spring(), value: animateHeart)
                         }
 
                     }
@@ -1042,6 +1297,22 @@ struct HomeView: View {
 
                 DispatchQueue.main.async {
                     greenScoreResult = product.ecoscore_grade?.uppercased() ?? "Unknown"
+                 
+                    if scanItem.greenScore == "A" || scanItem.greenScore == "B"{
+                            withAnimation {
+                                showConfetti = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                showConfetti = false
+                            }
+                        }
+
+                        // rest of your Firestore + nutrition code...
+                    // ✅ immediately add to local recentScans
+                       recentScans.insert(scanItem, at: 0)
+
+                       // ✅ immediately show ScanDetailsView
+                       selectedScan = scanItem
 
                     if let imageURLString = product.image_url,
                        let url = URL(string: imageURLString) {
@@ -1140,8 +1411,91 @@ struct HomeView: View {
         }
             
     }
-    
 
+}
+struct ScanRowView: View {
+    let scan: ScanItem
+    @EnvironmentObject var favoritesManager: FavoritesManager
+    @State private var animateHeart = false
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 15) {
+                AsyncImage(url: URL(string: scan.imageURL)) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .frame(width: 80, height: 80)
+                    case .success(let image):
+                        image.resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    case .failure:
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
+                            .background(Color.gray.opacity(0.3))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(scan.title)
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .lineLimit(2)
+
+                        Spacer()
+
+                        Button(action: {
+                            favoritesManager.toggleFavorite(scan: scan)
+                            triggerSuccessHaptic()
+
+                            withAnimation(.easeInOut(duration: 0.25)) {
+                                animateHeart = true
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                animateHeart = false
+                            }
+                        }) {
+                            Image(systemName: favoritesManager.isFavorite(scan) ? "heart.fill" : "heart")
+                                .foregroundColor(favoritesManager.isFavorite(scan) ? .red : .white)
+                                .scaleEffect(animateHeart ? 2.7 : 1.0)  // bounce
+                                .shadow(color: animateHeart ? .red.opacity(0.7) : .clear,
+                                        radius: 12, x: 0, y: 0) // glow
+                                .animation(.spring(response: 0.3, dampingFraction: 0.4), value: animateHeart)
+                        }
+                    }
+
+                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
+                    Text("Fat: \(String(format: "%.2f", scan.fat)) g").foregroundColor(.white)
+                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g").foregroundColor(.white)
+                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g").foregroundColor(.white)
+                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g").foregroundColor(.white)
+                }
+            }
+            .padding()
+            .background(Color("grey"))
+            .cornerRadius(15)
+
+            Text("GREEN SCORE: \(scan.greenScore)")
+                .font(.custom("BebasNeue-Regular", size: 18))
+                .frame(width: 300, height: 35)
+                .background(
+                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
+                    ? Color.green
+                    : Color.red
+                )
+                .cornerRadius(8)
+                .foregroundColor(.white)
+                .padding(.top, 5)
+        }
+    }
 }
 
 
@@ -1961,5 +2315,81 @@ struct ScanDetailsView: View {
         .padding(.horizontal, 20)
     }
 }
+struct TransitionOverlay: View {
+    @Binding var show: Bool
+    @State private var xOffset: CGFloat = -UIScreen.main.bounds.width
+
+    var body: some View {
+        ZStack {
+            if show {
+                Color("ourgreen")
+                    .ignoresSafeArea()
+                    .overlay(
+                        Image("app_CAC icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 160, height: 160)
+                            .shadow(radius: 8)
+                    )
+                    .offset(x: xOffset)
+                    .onAppear {
+                        let screenWidth = UIScreen.main.bounds.width
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            xOffset = 0 // move to center
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            withAnimation(.easeInOut(duration: 0.5)) {
+                                xOffset = screenWidth // exit to right
+                            }
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            show = false // hide after full sweep
+                            xOffset = -screenWidth // reset for next time
+                        }
+                    }
+            }
+        }
+    }
+}
+
+func triggerSuccessHaptic() {
+    let generator = UINotificationFeedbackGenerator()
+    generator.notificationOccurred(.success)
+}
 
 
+struct ConfettiView: View {
+    @State private var particles = (0..<40).map { _ in UUID() }
+    @State private var animate = false
+
+    var body: some View {
+        GeometryReader { geo in
+            ForEach(particles, id: \.self) { id in
+                Circle()
+                    .fill(Color.random)
+                    .frame(width: 8, height: 8)
+                    .position(
+                        x: CGFloat.random(in: 0...geo.size.width),
+                        y: animate ? geo.size.height + 20 : -20
+                    )
+                    .animation(
+                        Animation.linear(duration: Double.random(in: 2...4))
+                            .repeatCount(1, autoreverses: false),
+                        value: animate
+                    )
+            }
+            .onAppear {
+                animate = true
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.clear)
+    }
+}
+
+
+extension Color {
+    static var random: Color {
+        [.red, .green, .blue, .yellow, .purple, .orange].randomElement()!
+    }
+}
