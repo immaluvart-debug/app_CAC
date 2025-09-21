@@ -394,12 +394,32 @@ struct WelcomeView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 20) {
-                    Image("app_CAC icon")
-                        .resizable()
-                        .frame(width: 175, height: 175)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 30)
+                            .fill(Color.ourgreen)
+                            .frame(width: 200, height: 200)
+                        Image("app_CAC icon")
+                            .resizable()
+                            .frame(width: 175, height: 175)
+                        
+                    }
                     Text("welcome")
-                        .font(.custom("Allura-Regular", size: 70))
-                        .foregroundStyle(Color(.white))
+                        .font(.custom("Allura-Regular", size: 73))
+                        .bold(true)
+                        .foregroundColor(.white)
+                        .overlay(
+                            Text("welcome")
+                                .font(.custom("Allura-Regular", size: 70))
+                                .foregroundColor(.clear)
+                                .overlay(
+                                    LinearGradient(colors: [.black], startPoint: .leading, endPoint: .trailing)
+                                        .mask(
+                                            Text("welcome")
+                                                .font(.custom("Allura-Regular", size: 70))
+                                        )
+                                    )
+                        )
+
 
                     ZStack {
                         RoundedRectangle(cornerRadius: 20)
