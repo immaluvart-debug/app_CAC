@@ -973,6 +973,7 @@ struct GoalRow: View {
 
 
 struct HomeView: View {
+    @State private var celebratedScans: Set<String> = []
     @EnvironmentObject var favoritesManager: FavoritesManager
     @State private var selectedScan: ScanItem? = nil
     @State private var showConfetti = false
@@ -1169,11 +1170,14 @@ struct HomeView: View {
         }
         .sheet(item: $selectedScan) { scan in
             ScanDetailsView(scan: scan, onCelebrate: {
-                withAnimation {
-                    showConfetti = true
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    showConfetti = false
+                if !celebratedScans.contains(scan.id) {   // 👈 only if new
+                    celebratedScans.insert(scan.id)
+                    withAnimation {
+                        showConfetti = true
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        showConfetti = false
+                    }
                 }
             })
             .environmentObject(favoritesManager)
@@ -2403,33 +2407,38 @@ func triggerSuccessHaptic() {
 
 
 struct ConfettiView: View {
-    @State private var particles = (0..<40).map { _ in UUID() }
+    @State private var particles = (0..<70).map { _ in UUID() }
     @State private var animate = false
 
     var body: some View {
         GeometryReader { geo in
-            ForEach(particles, id: \.self) { id in
-                Circle()
-                    .fill(Color.random)
-                    .frame(width: 8, height: 8)
-                    .position(
-                        x: CGFloat.random(in: 0...geo.size.width),
-                        y: animate ? geo.size.height + 20 : -20
-                    )
-                    .animation(
-                        Animation.linear(duration: Double.random(in: 2...4))
-                            .repeatCount(1, autoreverses: false),
-                        value: animate
-                    )
+            ZStack {
+                ForEach(particles, id: \.self) { id in
+                    Circle()
+                        .fill(Color.random)
+                        .frame(width: 8, height: 8)
+                        .position(
+                            x: CGFloat.random(in: 0...geo.size.width),
+                            y: animate ? geo.size.height + 20 : -20
+                        )
+                        .animation(
+                            Animation.linear(duration: Double.random(in: 2...4))
+                                .repeatCount(1, autoreverses: false),
+                            value: animate
+                        )
+                }
             }
+            .frame(width: geo.size.width, height: geo.size.height) // 👈 fill full screen
+            .contentShape(Rectangle()) // ensures it takes full space
             .onAppear {
-                animate = true
+                                  animate = true
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea() // 👈 makes sure it goes edge to edge
         .background(Color.clear)
     }
 }
+
 
 
 extension Color {
