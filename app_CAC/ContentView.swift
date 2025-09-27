@@ -1168,8 +1168,15 @@ struct HomeView: View {
             }
         }
         .sheet(item: $selectedScan) { scan in
-            ScanDetailsView(scan: scan)
-                .environmentObject(favoritesManager)
+            ScanDetailsView(scan: scan, onCelebrate: {
+                withAnimation {
+                    showConfetti = true
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    showConfetti = false
+                }
+            })
+            .environmentObject(favoritesManager)
         }
         .presentationDetents([.large])
     }
@@ -2153,7 +2160,7 @@ struct ScanDetailsView: View {
     @State private var selectedTab = 0
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var favoritesManager: FavoritesManager
-    
+    var onCelebrate: (() -> Void)? = nil
     // Helper: main Nutri-Score color
     private var nutriColor: Color {
         (scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B")
@@ -2315,8 +2322,14 @@ struct ScanDetailsView: View {
                     }
                     .tag(1)
                 }
+                
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            }.onAppear {
+                if scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B" {
+                    onCelebrate?()
+                }
             }
+
         }
         // 👇 Apply lighter Nutri-Score tint background
         /*.background(
@@ -2344,6 +2357,8 @@ struct ScanDetailsView: View {
         .padding(.horizontal, 20)
     }
 }
+
+
 struct TransitionOverlay: View {
     @Binding var show: Bool
     @State private var xOffset: CGFloat = -UIScreen.main.bounds.width
