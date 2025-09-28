@@ -9,7 +9,7 @@ struct Product: Identifiable, Equatable, Hashable {
     let coordinate: CLLocationCoordinate2D
     let imageUrl: String?
     let nutrition: String?
-    
+        
     // MARK: - Equatable
     static func == (lhs: Product, rhs: Product) -> Bool {
         lhs.id == rhs.id
@@ -69,7 +69,6 @@ final class DemoAPIManager {
         }.resume()
     }
 }
-
 struct NearbyProductsMapView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var products: [Product] = []
@@ -79,8 +78,11 @@ struct NearbyProductsMapView: View {
     )
     @State private var showIntroPopup = true
     @State private var showPopup = true
-    @State private var selectedProduct: Product? = nil   // ✅ moved here
-    
+    @State private var selectedProduct: Product? = nil
+
+    // track price popup visibility
+    @State private var showPricePopup = false
+
     var body: some View {
         ZStack {
             Map(coordinateRegion: $region, annotationItems: products) { product in
@@ -91,7 +93,7 @@ struct NearbyProductsMapView: View {
                             .padding(4)
                             .background(Color.white.opacity(0.8))
                             .cornerRadius(6)
-                        
+
                         Image(systemName: "mappin.circle.fill")
                             .font(.title)
                             .foregroundColor(.green)
@@ -99,83 +101,139 @@ struct NearbyProductsMapView: View {
                                 selectedProduct = product
                             }
                     }
-                    .onTapGesture {
-                        selectedProduct = product
-                    }
                 }
             }
-            
+
+            // --- DETAILS BOTTOM SHEET STYLE POPUP ---
             if let product = selectedProduct {
                 VStack {
                     Spacer()
-                    
-                    VStack(spacing: 10) {
-                        Text(product.name)
-                            .font(.headline)
-                            .multilineTextAlignment(.center)
-                        
-                        if let imageUrl = product.imageUrl, let url = URL(string: imageUrl) {
-                            AsyncImage(url: url) { phase in
-                                switch phase {
-                                case .empty:
-                                    ProgressView()
-                                case .success(let image):
-                                    image.resizable()
-                                         .scaledToFit()
-                                         .frame(height: 100)
-                                case .failure:
-                                    Image(systemName: "photo")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(height: 100)
-                                @unknown default:
-                                    EmptyView()
+
+                    ZStack(alignment: .topLeading) {
+                        // Main card
+                        VStack(spacing: 12) {
+                            // Header row
+                            HStack(spacing: 10) {
+                                Button(action: {
+                                    withAnimation { showPricePopup.toggle() }
+                                }) {
+                                    Image(systemName: "dollarsign.ring")
+                                        .font(.title3)
+                                        .padding(6)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+
+                                Text(product.name)
+                                    .font(.headline)
+                                    .multilineTextAlignment(.center)
+
+                                Spacer()
+                            }
+
+                            // Nutrition info
+                            let nutritionLines = product.nutrition?
+                                .components(separatedBy: "•")
+                                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                                ?? ["Nutrition data unavailable"]
+
+                            HStack(alignment: .top, spacing: 16) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    ForEach(nutritionLines, id: \.self) { line in
+                                        Text(line)
+                                            .multilineTextAlignment(.leading)
+                                    }
+                                }
+                                .font(.body) // bigger text
+                                .frame(minHeight: 80, alignment: .topLeading)
+
+                                Image("placeholder_img")
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 80, height: 80)
+                                    .clipped()
+                                    .cornerRadius(8)
+                            }
+
+                            // Optional product image
+                            if let imageUrl = product.imageUrl, let url = URL(string: imageUrl) {
+                                AsyncImage(url: url) { phase in
+                                    switch phase {
+                                    case .empty:
+                                        ProgressView()
+                                    case .success(let image):
+                                        image.resizable()
+                                             .scaledToFit()
+                                             .frame(height: 100)
+                                    case .failure:
+                                        Image(systemName: "photo")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(height: 100)
+                                    @unknown default:
+                                        EmptyView()
+                                    }
                                 }
                             }
+
+                            Button("Close") {
+                                selectedProduct = nil
+                                showPricePopup = false
+                            }
+                            .padding(.top, 10)
+                            .frame(maxWidth: .infinity)
+                            .background(Color("darkgreen"))
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
                         }
-                        
-                        if let nutrition = product.nutrition {
-                            Text(nutrition)
-                                .font(.subheadline)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal)
+                        .padding()
+                        .frame(maxWidth: 240) // smaller horizontal width
+                        .background(Color("ourgreen").opacity(0.7))
+                        .cornerRadius(20)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color("lightestgreen").opacity(0.7), lineWidth: 2)
+                        )
+                        .shadow(radius: 10)
+                        .padding(.bottom, 40)
+
+                        // Floating price popup overlay (above card, not inside it)
+                        if showPricePopup {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Estimated Price")
+                                    .font(.caption).bold()
+                                Text("$\(Int.random(in: 1...20)).99")
+                                    .font(.caption2)
+                            }
+                            .padding(8)
+                            .background(Color.white)
+                            .cornerRadius(8)
+                            .shadow(radius: 4)
+                            .offset(x: 10, y: -40) // adjust to point near the $ button
+                            .transition(.scale.combined(with: .opacity))
                         }
-                        
-                        Button("Close") {
-                            selectedProduct = nil
-                        }
-                        .padding(.top, 10)
-                        .frame(maxWidth: 100)
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
                     }
-                    .frame(maxHeight: UIScreen.main.bounds.height / 3)
-                    .padding()
-                    .background(Color.white)
-                    .cornerRadius(12)
-                    .shadow(radius: 10)
-                    .padding(.bottom, 40)
                 }
                 .transition(.move(edge: .bottom))
-                .animation(.spring(), value: selectedProduct)  // ✅ works now
+                .animation(.spring(), value: selectedProduct)
+                .onChange(of: selectedProduct) { _ in
+                    showPricePopup = false
+                }
             }
+
+            // --- INTRO POPUP (unchanged) ---
             if showIntroPopup {
                 VStack(spacing: 20) {
-                    Image("app_CAC icon") // 👈 from Assets
+                    Image("app_CAC icon")
                         .resizable()
                         .scaledToFit()
                         .frame(width: 80, height: 80)
-                    
-                    
+
                     Text("Reduce your carbon footprint\nby buying items near you!")
                         .font(.custom("Quicksand-Regular", size: 24))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
-                    
-                    Button(action: {
-                        showIntroPopup = false
-                    }) {
+
+                    Button(action: { showIntroPopup = false }) {
                         Text("OK")
                             .font(.custom("Quicksand-Regular", size: 22))
                             .padding(.vertical, 8)
@@ -188,10 +246,10 @@ struct NearbyProductsMapView: View {
                 .padding()
                 .frame(maxWidth: 300)
                 .background(Color("ourgreen").opacity(0.9))
-                .cornerRadius(20) // 👈 rounded green rectangle
+                .cornerRadius(20)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color("lightestgreen").opacity(0.7), lineWidth: 2) // 👈 rounded border
+                        .stroke(Color("lightestgreen").opacity(0.7), lineWidth: 2)
                 )
                 .shadow(radius: 10)
             }
@@ -200,12 +258,11 @@ struct NearbyProductsMapView: View {
             fetchProducts()
         }
     }
-    
+
     private func fetchProducts() {
         DemoAPIManager.shared.fetchDemoProducts { offProducts in
             DispatchQueue.main.async {
                 if offProducts.isEmpty {
-                    // Fallback: ~20 demo pins around South San Jose
                     let sanJosePins = (1...20).map { _ in
                         let lat = 37.2 + Double.random(in: -0.05...0.05)
                         let lon = -121.8 + Double.random(in: -0.05...0.05)
@@ -217,8 +274,7 @@ struct NearbyProductsMapView: View {
                             nutrition: "Calories: \(Int.random(in: 50...500)) • Fat: \(Int.random(in: 1...20))g • Sugar: \(Int.random(in: 1...30))g"
                         )
                     }
-                    
-                    // ~500 demo pins across the US
+
                     let usPins = (1...500).map { _ in
                         let lat = Double.random(in: 25.0...49.0)
                         let lon = Double.random(in: -124.0 ... -67.0)
@@ -230,10 +286,9 @@ struct NearbyProductsMapView: View {
                             nutrition: "Calories: \(Int.random(in: 50...500)) • Fat: \(Int.random(in: 1...20))g • Sugar: \(Int.random(in: 1...30))g"
                         )
                     }
-                    
+
                     products = sanJosePins + usPins
                 } else {
-                    // Real API results: pins near San Jose
                     products = offProducts.map { offProduct in
                         let lat = 37.2 + Double.random(in: -0.05...0.05)
                         let lon = -121.8 + Double.random(in: -0.05...0.05)
