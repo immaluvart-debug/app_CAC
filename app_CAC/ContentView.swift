@@ -168,208 +168,6 @@ final class FirestoreManager {
             ref.delete(completion: completion)
         }
     }
-    
-//
-////MARK: - WelcomeView
-//struct WelcomeView: View {
-//    @State private var isLogin = true
-//    @State private var email = ""
-//    @State private var password = ""
-//    // navigation states
-//    @State private var navigateToHome = false
-//    @State private var navigateToPreferences = false
-//    // ui states
-//    @State private var errorMessage = ""
-//    @State private var isLoading = false
-//    
-//    var body: some View {
-//        NavigationStack {
-//            ZStack {
-//                Color.ourgreen.ignoresSafeArea()
-//                Image("bg-sky-tree")
-//                .resizable()
-//                .scaledToFill()
-//                .ignoresSafeArea()
-//                VStack(spacing: 20) {
-//                    Image("app_CAC icon")
-//                        .resizable()
-//                        .frame(width: 175, height: 175)
-//                    Text("welcome")
-//                        .font(.custom("Allura-Regular", size: 70))
-//                        .foregroundStyle(Color(.white))
-//                    
-//                    ZStack {
-//                        RoundedRectangle(cornerRadius: 20)
-//                            .fill(Color.ourgreen)
-//                            .frame(width: 345, height: 420)
-//                            .border(Color("blue"))
-//                        
-//                        VStack(spacing: 14) {
-//                            HStack(spacing: 16) {
-//                                Button {
-//                                    isLogin = true
-//                                    email = ""
-//                                    password = ""
-//                                    errorMessage = ""
-//                                } label: {
-//                                    Text("LOG IN")
-//                                        .font(.headline)
-//                                        .foregroundColor(.white)
-//                                        .padding(.vertical, 15)
-//                                        .padding(.horizontal, 20)
-//                                        .background(Color("darkestGrey"))
-//                                }
-//                                
-//                                Button {
-//                                    isLogin = false
-//                                    email = ""
-//                                    password = ""
-//                                    errorMessage = ""
-//                                } label: {
-//                                    Text("SIGN UP")
-//                                        .font(.headline)
-//                                        .foregroundColor(.white)
-//                                        .padding(.vertical, 15)
-//                                        .padding(.horizontal, 20)
-//                                        .background(Color("darkestGrey"))
-//                                }
-//                            }
-//                            
-//                            ZStack {
-//                                Rectangle()
-//                                    .fill(Color("darkestGrey"))
-//                                    .frame(width: 280, height: 260)
-//                                
-//                                VStack(alignment: .leading, spacing: 12) {
-//                                    if isLogin {
-//                                        Text("enter email:")
-//                                            .foregroundColor(.white)
-//                                        TextField("you@example.com", text: $email)
-//                                            .textFieldStyle(RoundedBorderTextFieldStyle())
-//                                            .frame(width: 250)
-//                                            .autocapitalization(.none)
-//                                            .keyboardType(.emailAddress)
-//                                        
-//                                        Text("enter password:")
-//                                            .foregroundColor(.white)
-//                                        SecureField("Password", text: $password)
-//                                            .textFieldStyle(RoundedBorderTextFieldStyle())
-//                                            .frame(width: 250)
-//                                        
-//                                        if !errorMessage.isEmpty {
-//                                            Text(errorMessage)
-//                                                .foregroundColor(.red)
-//                                                .font(.system(size: 14))
-//                                        }
-//                                        
-//                                        Button(action: loginTapped) {
-//                                            HStack {
-//                                                if isLoading {
-//                                                    ProgressView().scaleEffect(0.8)
-//                                                }
-//                                                Text("OK")
-//                                                    .font(.headline)
-//                                                    .foregroundColor(.white)
-//                                                    .padding()
-//                                                    .frame(width: 100)
-//                                                    .background(Color("grey"))
-//                                                    .cornerRadius(8)
-//                                            }
-//                                        }
-//                                        .disabled(email.isEmpty || password.isEmpty || isLoading)
-//                                        
-//                                    } else {
-//                                        Text("create email:")
-//                                            .foregroundColor(.white)
-//                                        TextField("you@example.com", text: $email)
-//                                            .textFieldStyle(RoundedBorderTextFieldStyle())
-//                                            .frame(width: 250)
-//                                            .autocapitalization(.none)
-//                                            .keyboardType(.emailAddress)
-//                                        
-//                                        Text("create password:")
-//                                            .foregroundColor(.white)
-//                                        SecureField("Password", text: $password)
-//                                            .textFieldStyle(RoundedBorderTextFieldStyle())
-//                                            .frame(width: 250)
-//                                        
-//                                        if !errorMessage.isEmpty {
-//                                            Text(errorMessage)
-//                                                .foregroundColor(.red)
-//                                                .font(.system(size: 14))
-//                                        }
-//                                        
-//                                        Button(action: signUpTapped) {
-//                                            HStack {
-//                                                if isLoading {
-//                                                    ProgressView().scaleEffect(0.8)
-//                                                }
-//                                                Text("OK")
-//                                                    .font(.headline)
-//                                                    .foregroundColor(.white)
-//                                                    .padding()
-//                                                    .frame(width: 100)
-//                                                    .background(Color("grey"))
-//                                                    .cornerRadius(8)
-//                                            }
-//                                        }
-//                                        .disabled(email.isEmpty || password.isEmpty || isLoading)
-//                                    }
-//                                    
-//                                    // Hidden NavigationLinks — triggered only on success
-//                                    NavigationLink(destination: HomeView(), isActive: $navigateToHome) { EmptyView() }
-//                                    NavigationLink(destination: PreferencesView(), isActive: $navigateToPreferences) { EmptyView() }
-//                                }
-//                                .padding()
-//                            }
-//                        }
-//                    }
-//                    .padding()
-//                }
-//            }
-//        }
-//        .ignoresSafeArea()
-//        .statusBarHidden(true)
-//        TransitionOverlay(show: $isTransitioning)
-//    }
-//    
-//
-//   // MARK: - Actions
-//   private func loginTapped() {
-//       errorMessage = ""
-//       isLoading = true
-//       FirebaseAuthManager.shared.login(email: email.trimmingCharacters(in: .whitespacesAndNewlines),
-//                                        password: password) { result in
-//           isLoading = false
-//           switch result {
-//           case .success:
-//               errorMessage = ""
-//               navigateToHome = true
-//           case .failure(let error):
-//               errorMessage = error.localizedDescription
-//               navigateToHome = false
-//           }
-//       }
-//   }
-//
-//   private func signUpTapped() {
-//       errorMessage = ""
-//       isLoading = true
-//       FirebaseAuthManager.shared.signUp(email: email.trimmingCharacters(in: .whitespacesAndNewlines),
-//                                         password: password) { result in
-//           isLoading = false
-//           switch result {
-//           case .success:
-//               errorMessage = ""
-//               navigateToPreferences = true
-//           case .failure(let error):
-//               errorMessage = error.localizedDescription
-//               navigateToPreferences = false
-//           }
-//       }
-//   }
-//}
-//
 //MARK: - WelcomeView
 struct WelcomeView: View {
     @State private var isLogin = true
@@ -971,7 +769,7 @@ struct GoalRow: View {
     }
 }
 
-
+/*
 struct HomeView: View {
     @State private var celebratedScans: Set<String> = []
     @EnvironmentObject var favoritesManager: FavoritesManager
@@ -1269,124 +1067,256 @@ struct HomeView: View {
                 .padding(.top, 5)
         }
     }
-        
-    
-    // MARK: - Fetch product data
-    func fetchGreenScore(for barcode: String) {
-        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json") else {
-            greenScoreResult = "Invalid barcode"
-            return
+      */
+struct HomeView: View {
+    @State private var celebratedScans: Set<String> = []
+    @EnvironmentObject var favoritesManager: FavoritesManager
+    @State private var selectedScan: ScanItem? = nil
+    @State private var showConfetti = false
+    @State private var recentScans: [ScanItem] = []
+    @State private var favoriteScans: [ScanItem] = []
+    @State private var isShowingScanner = false
+    @State private var greenScoreResult: String = ""
+    @State private var productImageURL: URL? = nil
+    @State private var nutritionInfo: String = ""
+    @State private var isSearching = false
+    @State private var searchText = ""
+    @State private var showOverlay = false
+    @State private var showChatBot = false
+    @GestureState private var dragOffset: CGFloat = 0
+
+    private var displayedScans: [ScanItem] {
+        if isSearching && !searchText.isEmpty {
+            return recentScans.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        } else {
+            return recentScans
         }
+    }
 
-        URLSession.shared.dataTask(with: url) { data, _, _ in
-            guard let data = data else {
-                DispatchQueue.main.async {
-                    greenScoreResult = "No data from server"
-                }
-                return
-            }
+    var body: some View {
+        ZStack {
+            ChatBotView()
+                .offset(x: showChatBot ? 0 : -UIScreen.main.bounds.width)
+                .animation(.easeInOut, value: showChatBot)
+                .zIndex(1)
 
-            struct Nutriments: Codable {
-                let energy_kcal: Double?
-                let fat: Double?
-                let carbohydrates: Double?
-                let sugars: Double?
-                let fiber: Double?
-                let proteins: Double?
-                let salt: Double?
-            }
+            NavigationView {
+                ZStack {
+                    Color("ourgreen").ignoresSafeArea()
+                    Image("bg-leaves").resizable().scaledToFill().ignoresSafeArea()
 
-            struct Product: Codable {
-                let product_name: String?
-                let ecoscore_grade: String?
-                let image_url: String?
-                let nutriments: Nutriments?
-                let brands: String?
-                let labels_tags: [String]?
-                let origins_tags: [String]?
-                let misc_tags: [String]?
-                let processing_score: String?
-            }
+                    VStack(spacing: 15) {
+                        VStack(spacing: 5) {
+                            Image("app_CAC icon").resizable().scaledToFit().frame(width: 140, height: 140)
 
-            struct Response: Codable {
-                let product: Product?
-            }
-
-            if let decoded = try? JSONDecoder().decode(Response.self, from: data),
-               let product = decoded.product {
-
-                let scanItem = ScanItem(
-                    id: UUID().uuidString,
-                    title: product.product_name ?? "Unknown Product",
-                    energy: product.nutriments?.energy_kcal ?? 0,
-                    fat: product.nutriments?.fat ?? 0,
-                    carbohydrates: product.nutriments?.carbohydrates ?? 0,
-                    sugars: product.nutriments?.sugars ?? 0,
-                    fiber: product.nutriments?.fiber ?? 0,
-                    proteins: product.nutriments?.proteins ?? 0,
-                    salt: product.nutriments?.salt ?? 0,
-                    greenScore: product.ecoscore_grade?.uppercased() ?? "Unknown",
-                    imageURL: product.image_url ?? "",
-                    scannedAt: Date(),
-                    brand: product.brands ?? "Unknown",
-                    labels: product.labels_tags ?? [],
-                    origin: product.origins_tags?.first ?? "Unknown",
-                    biodiversity: product.misc_tags?.first ?? "Unknown",
-                    processingScore: product.processing_score ?? "N/A"
-                )
-
-                DispatchQueue.main.async {
-                    greenScoreResult = product.ecoscore_grade?.uppercased() ?? "Unknown"
-                 
-                    if scanItem.greenScore == "A" || scanItem.greenScore == "B"{
-                            withAnimation {
-                                showConfetti = true
+                            HStack(spacing: 0) {
+                                NavigationLink(destination: RecommendedFoodsView(recentScans: recentScans)) {
+                                    Text("RECOMMENDED")
+                                        .font(.custom("BebasNeue-Regular", size: 22))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(Color("grey"))
+                                }
+                                NavigationLink(destination: NearbyProductsMapView()) {
+                                    Text("NEAR ME")
+                                        .font(.custom("BebasNeue-Regular", size: 22))
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                        .background(Color("grey"))
+                                }
                             }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                showConfetti = false
+                            .cornerRadius(5)
+                            .padding(.horizontal, 15)
+                        }
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text("Recent Scans")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                Spacer()
+                                HStack {
+                                    if isSearching {
+                                        TextField("Search scans...", text: $searchText)
+                                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                                            .frame(maxWidth: 200)
+                                            .transition(.move(edge: .trailing))
+                                    }
+                                    Button(action: {
+                                        withAnimation {
+                                            isSearching.toggle()
+                                            if !isSearching { searchText = "" }
+                                        }
+                                    }) {
+                                        Image(systemName: "magnifyingglass.circle").resizable().frame(width: 27, height: 27).foregroundColor(.gray)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 15)
+                            .padding(.top, 5)
+
+                            ScrollView {
+                                VStack(spacing: 15) {
+                                    if displayedScans.isEmpty {
+                                        Text("No recent scans found")
+                                            .foregroundColor(.gray)
+                                            .frame(maxWidth: .infinity, minHeight: 300)
+                                            .multilineTextAlignment(.center)
+                                    } else {
+                                        ForEach(displayedScans) { scan in
+                                            Button(action: { selectedScan = scan }) {
+                                                ScanRowView(scan: scan)
+                                            }
+                                            .buttonStyle(PlainButtonStyle())
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 15)
+                                .padding(.vertical, 10)
+                            }
+                        }
+                        .background(Color("lightestgreen"))
+                        .cornerRadius(15)
+                        .padding(.horizontal, 10)
+                        .frame(height: 400)
+
+                        Button("SCAN") {
+                            isShowingScanner = true
+                        }
+                        .font(.custom("BebasNeue-Regular", size: 30))
+                        .frame(width: 180, height: 60)
+                        .foregroundColor(.white)
+                        .background(Color("grey"))
+                        .cornerRadius(10)
+                        .sheet(isPresented: $isShowingScanner) {
+                            BarcodeScannerView { barcode in
+                                isShowingScanner = false
+                                fetchGreenScore(for: barcode)
                             }
                         }
 
-                        // rest of your Firestore + nutrition code...
-                    // ✅ immediately add to local recentScans
-                       recentScans.insert(scanItem, at: 0)
-
-                       // ✅ immediately show ScanDetailsView
-                       selectedScan = scanItem
-
-                    if let imageURLString = product.image_url,
-                       let url = URL(string: imageURLString) {
-                        productImageURL = url
-                    } else {
-                        productImageURL = nil
-                    }
-
-                    if let n = product.nutriments {
-                        nutritionInfo = """
-                        Energy: \(n.energy_kcal ?? 0) kcal
-                        Fat: \(n.fat ?? 0) g
-                        Carbs: \(n.carbohydrates ?? 0) g
-                        Sugars: \(n.sugars ?? 0) g
-                        Fiber: \(n.fiber ?? 0) g
-                        Proteins: \(n.proteins ?? 0) g
-                        Salt: \(n.salt ?? 0) g
-                        """
-                    } else {
-                        nutritionInfo = "No nutrition data available"
-                    }
-
-                    if let user = Auth.auth().currentUser {
-                        FirestoreManager.shared.saveScan(for: user.uid, scan: scanItem)
+                        Spacer()
                     }
                 }
-
-            } else {
-                DispatchQueue.main.async {
-                    greenScoreResult = "Error decoding data"
+                .toolbar {
+                    ToolbarItemGroup(placement: .navigationBarTrailing) {
+                        NavigationLink(destination: HabitTrackerView()) {
+                            Image("calendar_icon").resizable().frame(width: 24, height: 24).foregroundColor(.white)
+                        }
+                        NavigationLink(destination: FavoritesView().environmentObject(favoritesManager)) {
+                            Image("heart_icon").resizable().frame(width: 28, height: 28)
+                        }
+                    }
                 }
             }
+            .offset(x: showChatBot ? UIScreen.main.bounds.width : 0)
+            .gesture(
+                DragGesture()
+                    .updating($dragOffset) { value, state, _ in
+                        state = value.translation.width
+                    }
+                    .onEnded { value in
+                        if value.translation.width < -100 {
+                            withAnimation { showChatBot = true }
+                        } else if value.translation.width > 100 {
+                            withAnimation { showChatBot = false }
+                        }
+                    }
+            )
+            .zIndex(2)
+            TransitionOverlay(show: $showOverlay).zIndex(5)
+        }
+        .ignoresSafeArea()
+        .onAppear {
+            showOverlay = true
+            if let user = Auth.auth().currentUser {
+                FirestoreManager.shared.fetchScans(for: user.uid) { scans in
+                    self.recentScans = scans.sorted { $0.scannedAt > $1.scannedAt }
+                }
+            }
+        }
+        .sheet(item: $selectedScan) { scan in
+            ScanDetailsView(scan: scan, onCelebrate: {
+                if !celebratedScans.contains(scan.id) {
+                    celebratedScans.insert(scan.id)
+                    withAnimation { showConfetti = true }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { showConfetti = false }
+                }
+            })
+            .environmentObject(favoritesManager)
+        }
+        .presentationDetents([.large])
+        .overlay(
+            Group {
+                if showConfetti {
+                    ConfettiView().ignoresSafeArea().transition(.opacity).zIndex(1000)
+                }
+            }
+        )
+    }
+
+    func fetchGreenScore(for barcode: String) {
+        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json") else { greenScoreResult = "Invalid barcode"; return }
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            guard let data = data else { DispatchQueue.main.async { greenScoreResult = "No data from server" }; return }
+            struct Nutriments: Codable { let energy_kcal, fat, carbohydrates, sugars, fiber, proteins, salt: Double? }
+            struct Product: Codable { let product_name, ecoscore_grade, image_url, brands, processing_score: String?; let nutriments: Nutriments?; let labels_tags, origins_tags, misc_tags: [String]? }
+            struct Response: Codable { let product: Product? }
+            if let decoded = try? JSONDecoder().decode(Response.self, from: data), let product = decoded.product {
+                let scanItem = ScanItem(id: UUID().uuidString, title: product.product_name ?? "Unknown Product", energy: product.nutriments?.energy_kcal ?? 0, fat: product.nutriments?.fat ?? 0, carbohydrates: product.nutriments?.carbohydrates ?? 0, sugars: product.nutriments?.sugars ?? 0, fiber: product.nutriments?.fiber ?? 0, proteins: product.nutriments?.proteins ?? 0, salt: product.nutriments?.salt ?? 0, greenScore: product.ecoscore_grade?.uppercased() ?? "Unknown", imageURL: product.image_url ?? "", scannedAt: Date(), brand: product.brands ?? "Unknown", labels: product.labels_tags ?? [], origin: product.origins_tags?.first ?? "Unknown", biodiversity: product.misc_tags?.first ?? "Unknown", processingScore: product.processing_score ?? "N/A")
+                DispatchQueue.main.async {
+                    greenScoreResult = product.ecoscore_grade?.uppercased() ?? "Unknown"
+                    if scanItem.greenScore == "A" || scanItem.greenScore == "B" { withAnimation { showConfetti = true }; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { showConfetti = false } }
+                    recentScans.insert(scanItem, at: 0)
+                    selectedScan = scanItem
+                    if let imageURLString = product.image_url, let url = URL(string: imageURLString) { productImageURL = url } else { productImageURL = nil }
+                    if let n = product.nutriments { nutritionInfo = "Energy: \(n.energy_kcal ?? 0) kcal\nFat: \(n.fat ?? 0) g\nCarbs: \(n.carbohydrates ?? 0) g\nSugars: \(n.sugars ?? 0) g\nFiber: \(n.fiber ?? 0) g\nProteins: \(n.proteins ?? 0) g\nSalt: \(n.salt ?? 0) g" } else { nutritionInfo = "No nutrition data available" }
+                    if let user = Auth.auth().currentUser { FirestoreManager.shared.saveScan(for: user.uid, scan: scanItem) }
+                }
+            } else { DispatchQueue.main.async { greenScoreResult = "Error decoding data" } }
         }.resume()
     }
+}
+
+struct ChatBotView: View {
+    @State private var messages: [String] = ["Hi! Ask me about your food or green scores."]
+    @State private var newMessage: String = ""
+
+    var body: some View {
+        ZStack {
+            Color("grey").ignoresSafeArea()
+            VStack {
+                ScrollView {
+                    ForEach(messages, id: \.self) { msg in
+                        HStack {
+                            Text(msg)
+                                .padding()
+                                .background(Color.white)
+                                .cornerRadius(10)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 5)
+                    }
+                }
+                HStack {
+                    TextField("Type a message...", text: $newMessage)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    Button("Send") {
+                        guard !newMessage.isEmpty else { return }
+                        messages.append(newMessage)
+                        messages.append("Echo: \(newMessage)")
+                        newMessage = ""
+                    }
+                }
+                .padding()
+            }
+        }
+    }
+}
+
 
     // MARK: - Barcode Scanner
     struct BarcodeScannerView: UIViewControllerRepresentable {
@@ -1452,7 +1382,7 @@ struct HomeView: View {
             
     }
 
-}
+
 struct ScanRowView: View {
     let scan: ScanItem
     @EnvironmentObject var favoritesManager: FavoritesManager
