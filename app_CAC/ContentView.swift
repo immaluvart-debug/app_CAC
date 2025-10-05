@@ -2377,7 +2377,7 @@ extension Color {
     }
 }
 
-//MARK: - Habit Tracker View
+// MARK: - Habit Tracker View
 import SwiftUI
 
 enum CalendarViewMode: String, CaseIterable {
@@ -2397,124 +2397,153 @@ struct HabitTrackerView: View {
     @State private var viewMode: CalendarViewMode = .week
     @State private var entries: [GreenScoreEntry] = []
     @State private var showAddEntrySheet = false
-    
-    var today: Date {
-        return Date()
-    }
-    
+
+    var today: Date { Date() }
+
     var body: some View {
-        ZStack {
-            Color("ourgreen").ignoresSafeArea()
-            
-            VStack(spacing: 16) {
-                Text("Habit Tracker")
-                    .font(.custom("Allura-Regular", size: 50))
-                    .foregroundColor(.white)
-                
-                Picker("View Mode", selection: $viewMode) {
-                    ForEach(CalendarViewMode.allCases, id: \.self) { mode in
-                        Text(mode.rawValue)
+        NavigationView {
+            ZStack {
+                Color("ourgreen").ignoresSafeArea()
+
+                VStack(spacing: 16) {
+                    Text("Habit Tracker")
+                        .font(.custom("Allura-Regular", size: 50))
+                        .foregroundColor(.white)
+
+                    Text("\(viewMode.rawValue) View")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(.white)
+
+                    switch viewMode {
+                    case .day:
+                        DayView(entries: entries, date: today)
+                    case .week:
+                        WeekView(entries: entries, currentDate: today)
+                    case .month:
+                        MonthView(entries: entries, currentDate: today)
+                    }
+
+                    Spacer()
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        ForEach(CalendarViewMode.allCases, id: \.self) { mode in
+                            Button(action: { viewMode = mode }) {
+                                Label(mode.rawValue, systemImage: viewMode == mode ? "checkmark" : "")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "calendar")
+                            .foregroundColor(.white)
                     }
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                
-                switch viewMode {
-                case .day:
-                    DayView(entries: entries, date: today)
-                case .week:
-                    WeekView(entries: entries, currentDate: today)
-                case .month:
-                    MonthView(entries: entries, currentDate: today)
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        showAddEntrySheet = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .foregroundColor(.white)
+                    }
                 }
-                
-                Spacer()
             }
-        }
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    showAddEntrySheet = true
-                } label: {
-                    Image(systemName: "plus")
-                        .foregroundColor(.white)
+            .sheet(isPresented: $showAddEntrySheet) {
+                AddEntrySheet { newEntry in
+                    entries.append(newEntry)
                 }
             }
         }
-        .sheet(isPresented: $showAddEntrySheet) {
-            AddEntrySheet { newEntry in
-                entries.append(newEntry)
-            }
-        }
     }
-        func greenScoreToValue(_ score: String) -> Double? {
-            switch score.uppercased() {
-            case "A": return 5
-            case "B": return 4
-            case "C": return 3
-            case "D": return 2
-            case "E": return 1
-            default: return nil
-            }
-        }
-        
-        func valueToScore(_ value: Double) -> String {
-            switch value {
-            case 4.5...5: return "A"
-            case 3.5..<4.5: return "B"
-            case 2.5..<3.5: return "C"
-            case 1.5..<2.5: return "D"
-            default: return "E"
-            }
-        }
-        
-        func scoreColor(_ score: String) -> Color {
-            switch score.uppercased() {
-            case "A": return .darkgreen
-            case "B": return .green
-            case "C": return .yellow
-            case "D": return .orange
-            case "E": return .red
-            default: return .gray
-            }
-        }
+}
+
+// MARK: - Helper Methods
+func greenScoreToValue(_ score: String) -> Double? {
+    switch score.uppercased() {
+    case "A": return 5
+    case "B": return 4
+    case "C": return 3
+    case "D": return 2
+    case "E": return 1
+    default: return nil
     }
+}
 
+func valueToScore(_ value: Double) -> String {
+    switch value {
+    case 4.5...5: return "A"
+    case 3.5..<4.5: return "B"
+    case 2.5..<3.5: return "C"
+    case 1.5..<2.5: return "D"
+    default: return "E"
+    }
+}
 
-import SwiftUI
+func scoreColor(_ score: String) -> Color {
+    switch score.uppercased() {
+    case "A": return .green
+    case "B": return .mint
+    case "C": return .yellow
+    case "D": return .orange
+    case "E": return .red
+    default: return .gray
+    }
+}
 
+func emojiForScore(_ score: String) -> String {
+    switch score.uppercased() {
+    case "A": return "🤩"
+    case "B": return "👍"
+    case "C": return "🙂"
+    case "D": return "😕"
+    case "E": return "👎"
+    default: return ""
+    }
+}
+
+// MARK: - Add Entry Sheet
 struct AddEntrySheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var foodName: String = ""
     @State private var selectedScore: String? = nil
 
     let onSave: (GreenScoreEntry) -> Void
-
     let greenScores = ["A", "B", "C", "D", "E"]
 
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Food Name")) {
-                    TextField("Enter food name", text: $foodName)
-                }
+            ZStack {
+                Color("ourgreen").ignoresSafeArea()
 
-                Section(header: Text("Green Score")) {
-                    ForEach(greenScores, id: \.self) { score in
-                        HStack {
-                            Text(score)
-                            Spacer()
-                            if selectedScore == score {
-                                Image(systemName: "checkmark")
-                                    .foregroundColor(.green)
+                Form {
+                    Section(header: Text("Food Name").foregroundColor(.white)) {
+                        TextField("Enter food name", text: $foodName)
+                            .foregroundColor(.black)
+                            .accentColor(.black)
+                    }
+
+                    Section(header: Text("Green Score").foregroundColor(.white)) {
+                        ForEach(greenScores, id: \.self) { score in
+                            HStack {
+                                Text(score)
+                                    .foregroundColor(.black)
+                                Spacer()
+                                if selectedScore == score {
+                                    Image(systemName: "checkmark")
+                                        .foregroundColor(.green)
+                                }
                             }
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            selectedScore = score
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                selectedScore = score
+                            }
                         }
                     }
                 }
+                .scrollContentBackground(.hidden)
+                .background(Color("ourgreen"))
             }
             .navigationTitle("Add Entry")
             .navigationBarTitleDisplayMode(.inline)
@@ -2540,9 +2569,7 @@ struct AddEntrySheet: View {
     }
 }
 
-//MARK: - Day View
-import SwiftUI
-
+// MARK: - Day View
 struct DayView: View {
     var entries: [GreenScoreEntry]
     var date: Date
@@ -2553,11 +2580,23 @@ struct DayView: View {
         }
     }
 
+    var averageScoreLetter: String {
+        let mapped = dayEntries.compactMap { greenScoreToValue($0.score) }
+        guard !mapped.isEmpty else { return "-" }
+        let avg = mapped.reduce(0, +) / Double(mapped.count)
+        return valueToScore(avg)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Entries for Today")
                 .font(.headline)
+                .underline()
                 .foregroundColor(.white)
+
+            Text("Average Green Score: \(averageScoreLetter) \(emojiForScore(averageScoreLetter))")
+                .foregroundColor(.white)
+                .bold()
 
             if dayEntries.isEmpty {
                 Text("No entries yet.")
@@ -2566,33 +2605,21 @@ struct DayView: View {
                 ForEach(dayEntries) { entry in
                     HStack {
                         Text(entry.foodName)
-                            .foregroundColor(.white)
                         Spacer()
                         Text("Score: \(entry.score)")
-                            .foregroundColor(scoreColor(entry.score))
                     }
-                    .padding(.vertical, 4)
+                    .padding()
+                    .background(Color(.darkGray))
+                    .cornerRadius(10)
+                    .foregroundColor(scoreColor(entry.score))
                 }
             }
         }
         .padding(.horizontal)
     }
-
-    func scoreColor(_ score: String) -> Color {
-        switch score.uppercased() {
-            case "A": return .green
-            case "B": return .mint
-            case "C": return .yellow
-            case "D": return .orange
-            case "E": return .red
-            default: return .gray
-        }
-    }
 }
 
-//MARK: - Week View
-import SwiftUI
-
+// MARK: - Week View
 struct WeekView: View {
     var entries: [GreenScoreEntry]
     var currentDate: Date
@@ -2615,13 +2642,14 @@ struct WeekView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("This Week's Entries")
                 .font(.headline)
+                .underline()
                 .foregroundColor(.white)
 
-            Text("Average Green Score: \(averageScoreLetter)")
-                .foregroundColor(scoreColor(averageScoreLetter))
+            Text("Average Green Score: \(averageScoreLetter) \(emojiForScore(averageScoreLetter))")
+                .foregroundColor(.white)
                 .bold()
 
             if weekEntries.isEmpty {
@@ -2631,12 +2659,13 @@ struct WeekView: View {
                 ForEach(weekEntries) { entry in
                     HStack {
                         Text(entry.foodName)
-                            .foregroundColor(.white)
                         Spacer()
                         Text("Score: \(entry.score)")
-                            .foregroundColor(scoreColor(entry.score))
                     }
-                    .padding(.vertical, 2)
+                    .padding()
+                    .background(Color(.darkGray))
+                    .cornerRadius(10)
+                    .foregroundColor(scoreColor(entry.score))
                 }
             }
         }
@@ -2644,42 +2673,7 @@ struct WeekView: View {
     }
 }
 
-func greenScoreToValue(_ score: String) -> Double? {
-    switch score.uppercased() {
-        case "A": return 5
-        case "B": return 4
-        case "C": return 3
-        case "D": return 2
-        case "E": return 1
-        default: return nil
-    }
-}
-
-func valueToScore(_ value: Double) -> String {
-    switch value {
-        case 4.5...5: return "A"
-        case 3.5..<4.5: return "B"
-        case 2.5..<3.5: return "C"
-        case 1.5..<2.5: return "D"
-        default: return "E"
-    }
-}
-
-func scoreColor(_ score: String) -> Color {
-    switch score.uppercased() {
-        case "A": return .green
-        case "B": return .mint
-        case "C": return .yellow
-        case "D": return .orange
-        case "E": return .red
-        default: return .gray
-    }
-}
-
-
-//MARK: - Month View
-import SwiftUI
-
+// MARK: - Month View
 struct MonthView: View {
     var entries: [GreenScoreEntry]
     var currentDate: Date
@@ -2702,13 +2696,14 @@ struct MonthView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("This Month's Entries")
                 .font(.headline)
+                .underline()
                 .foregroundColor(.white)
 
-            Text("Average Green Score: \(averageScoreLetter)")
-                .foregroundColor(scoreColor(averageScoreLetter))
+            Text("Average Green Score: \(averageScoreLetter) \(emojiForScore(averageScoreLetter))")
+                .foregroundColor(.white)
                 .bold()
 
             if monthEntries.isEmpty {
@@ -2718,12 +2713,13 @@ struct MonthView: View {
                 ForEach(monthEntries) { entry in
                     HStack {
                         Text(entry.foodName)
-                            .foregroundColor(.white)
                         Spacer()
                         Text("Score: \(entry.score)")
-                            .foregroundColor(scoreColor(entry.score))
                     }
-                    .padding(.vertical, 2)
+                    .padding()
+                    .background(Color(.darkGray))
+                    .cornerRadius(10)
+                    .foregroundColor(scoreColor(entry.score))
                 }
             }
         }
