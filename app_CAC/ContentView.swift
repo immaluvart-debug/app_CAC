@@ -5,6 +5,8 @@ import CoreML
 import PhotosUI
 import Foundation
 import FirebaseAuth
+import FirebaseCore
+import FirebaseAI
 
 import FirebaseFirestore
 import FirebaseStorage
@@ -1280,42 +1282,338 @@ struct HomeView: View {
     }
 }
 
-struct ChatBotView: View {
-    @State private var messages: [String] = ["Hi! Ask me about your food or green scores."]
-    @State private var newMessage: String = ""
 
-    var body: some View {
-        ZStack {
-            Color("grey").ignoresSafeArea()
-            VStack {
-                ScrollView {
-                    ForEach(messages, id: \.self) { msg in
-                        HStack {
-                            Text(msg)
-                                .padding()
-                                .background(Color.white)
-                                .cornerRadius(10)
-                            Spacer()
+//struct ChatBotView: View {
+//struct ChatMessage: Identifiable, Hashable {
+//enum Role { case user, assistant }
+//let id = UUID()
+//let role: Role
+//let text: String
+//}
+//
+//@State private var messages: [ChatMessage] = [
+//    ChatMessage(role: .assistant, text: "👋 Hi! I’m your food assistant. Ask me about nutrition, eco-scores, or healthy choices.")
+//]
+//@State private var newMessage: String = ""
+//@State private var isLoading = false
+//
+//var body: some View {
+//    ZStack {
+//        Color("ourgreen").ignoresSafeArea()
+//
+//        VStack {
+//            Spacer()
+//
+//            VStack {
+//                ScrollViewReader { proxy in
+//                    ScrollView {
+//                        VStack(spacing: 10) {
+//                            ForEach(messages) { msg in
+//                                HStack {
+//                                    if msg.role == .user {
+//                                        Spacer()
+//                                        Text(msg.text)
+//                                            .padding(10)
+//                                            .background(Color.blue.opacity(0.85))
+//                                            .foregroundColor(.white)
+//                                            .cornerRadius(10)
+//                                            .frame(maxWidth: .infinity, alignment: .trailing)
+//                                    } else {
+//                                        Text(msg.text)
+//                                            .padding(10)
+//                                            .background(Color.white)
+//                                            .foregroundColor(.black)
+//                                            .cornerRadius(10)
+//                                            .frame(maxWidth: .infinity, alignment: .leading)
+//                                        Spacer()
+//                                    }
+//                                }
+//                                .id(msg.id)
+//                                .padding(.horizontal, 8)
+//                            }
+//
+//                            if isLoading {
+//                                HStack {
+//                                    ProgressView()
+//                                    Text("Thinking...")
+//                                        .foregroundColor(.gray)
+//                                }
+//                                .padding()
+//                            }
+//                        }
+//                        .padding(.vertical, 10)
+//                    }
+//                    .onChange(of: messages.count) { _ in
+//                        if let last = messages.last {
+//                            withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
+//                        }
+//                    }
+//                }
+//
+//                HStack(spacing: 12) {
+//                    TextField("Type a message...", text: $newMessage)
+//                        .textFieldStyle(RoundedBorderTextFieldStyle())
+//                        .disabled(isLoading)
+//                        .frame(minHeight: 36)
+//
+//                    Button(action: { sendMessage() }) {
+//                        if isLoading {
+//                            ProgressView()
+//                                .scaleEffect(0.9)
+//                                .frame(width: 60, height: 36)
+//                        } else {
+//                            Text("Send")
+//                                .bold()
+//                                .frame(width: 60, height: 36)
+//                        }
+//                    }
+//                    .disabled(newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading)
+//                    .background(isLoading ? Color.gray.opacity(0.3) : Color("darkestGrey"))
+//                    .foregroundColor(.white)
+//                    .cornerRadius(8)
+//                }
+//                .padding()
+//            }
+//            .background(Color("grey"))
+//            .cornerRadius(20)
+//            .padding(.horizontal, 16)
+//            .padding(.vertical, 60)
+//            .frame(maxHeight: .infinity)
+//
+//            Spacer()
+//        }
+//    }
+//}
+//
+//func sendMessage() {
+//    let text = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+//    guard !text.isEmpty else { return }
+//
+//    messages.append(ChatMessage(role: .user, text: text))
+//    newMessage = ""
+//    isLoading = true
+//
+//    Task {
+//        do {
+//            let ai = FirebaseAI.firebaseAI(backend: .googleAI())
+//            let model = ai.generativeModel(modelName: "gemini-2.5-flash")
+//            let response = try await model.generateContent(text)
+//
+//            let reply = response.text ?? "Sorry, I didn't get a response."
+//            await MainActor.run {
+//                messages.append(ChatMessage(role: .assistant, text: reply))
+//                isLoading = false
+//            }
+//        } catch {
+//            await MainActor.run {
+//                messages.append(ChatMessage(role: .assistant, text: "Error: \(error.localizedDescription)"))
+//                isLoading = false
+//            }
+//        }
+//    }
+//}
+//
+//
+//}
+
+
+import SwiftUI
+import FirebaseCore
+import FirebaseAI
+
+struct ChatBotView: View {
+struct ChatMessage: Identifiable, Hashable {
+enum Role { case user, assistant }
+let id = UUID()
+let role: Role
+let text: String
+}
+
+@State private var messages: [ChatMessage] = [
+    ChatMessage(role: .assistant, text: "👋 Hi! I’m your food assistant. Ask me about nutrition, eco-scores, or healthy choices.")
+]
+@State private var newMessage: String = ""
+@State private var isLoading = false
+    @State private var rotation = 0.0
+
+var body: some View {
+    ZStack {
+        Color("ourgreen").ignoresSafeArea()
+
+        VStack {
+            Spacer()
+
+            VStack(spacing: 0) {
+                // Header
+                Rectangle()
+                    .fill(Color(.lightGray))
+                    .frame(height: 40)
+                    .overlay(
+                        Text("AI Advisor")
+                            .font(.headline)
+                            .foregroundColor(.black)
+                    )
+                    .cornerRadius(20, corners: [.topLeft, .topRight])
+
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        VStack(spacing: 10) {
+                            ForEach(messages) { msg in
+                                HStack {
+                                    if msg.role == .user {
+                                        Spacer()
+                                        Text(msg.text)
+                                            .padding(10)
+                                            .background(Color("ourgreen"))
+                                            .foregroundColor(.white)
+                                            .cornerRadius(10)
+                                            .frame(maxWidth: .infinity, alignment: .trailing)
+                                    } else {
+                                        Text(msg.text)
+                                            .padding(10)
+                                            .background(Color.white)
+                                            .foregroundColor(.black)
+                                            .cornerRadius(10)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        Spacer()
+                                    }
+                                }
+                                .id(msg.id)
+                                .padding(.horizontal, 8)
+                            }
+
+                            if isLoading {
+                                ZStack {
+                                    //Color.black.opacity(0.3).ignoresSafeArea()
+                                    VStack(spacing: 16) {
+                                        Image("icon_w_otext")
+                                            .resizable()
+                                            .frame(width: 100, height: 100)
+                                            .rotationEffect(.degrees(rotation))
+                                            .onAppear {
+                                                withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
+                                                    rotation = 360
+                                                }
+                                            }
+                                        Text("Thinking...")
+                                            .font(.headline)
+                                            .foregroundColor(Color("ourgreen"))
+                                    }
+                                }/*
+                                VStack {
+                                    Image("icon_w_otext")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 100, height: 100)
+                                        .rotationEffect(.degrees(isLoading ? 360 : 0))
+                                        .animation(Animation.linear(duration: 1).repeatForever(autoreverses: false), value: isLoading)
+
+                                    Text("Thinking...")
+                                        .foregroundColor(Color("ourgreen"))
+                                        .font(.headline)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding()*/
+                            }
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 5)
+                        .padding(.vertical, 10)
+                    }
+                    .onChange(of: messages.count) { _ in
+                        if let last = messages.last {
+                            withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
+                        }
                     }
                 }
-                HStack {
+
+                HStack(spacing: 12) {
                     TextField("Type a message...", text: $newMessage)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                    Button("Send") {
-                        guard !newMessage.isEmpty else { return }
-                        messages.append(newMessage)
-                        messages.append("Echo: \(newMessage)")
-                        newMessage = ""
+                        .disabled(isLoading)
+                        .frame(minHeight: 36)
+
+                    Button(action: { sendMessage() }) {
+                        if isLoading {
+                            ProgressView()
+                                .scaleEffect(0.9)
+                                .frame(width: 60, height: 36)
+                        } else {
+                            Text("Send")
+                                .bold()
+                                .frame(width: 60, height: 36)
+                        }
                     }
+                    .disabled(newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading)
+                    .background(isLoading ? Color.gray.opacity(0.3) : Color("darkestGrey"))
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
                 }
                 .padding()
+            }
+            .background(Color("grey"))
+            .cornerRadius(20)
+            .padding(.horizontal, 16)
+            .padding(.top, 90)   // 🔥 More top padding
+            .padding(.bottom, 24) // Bottom stays the same
+            .frame(maxHeight: .infinity)
+
+            Spacer()
+        }
+    }
+}
+
+func sendMessage() {
+    let text = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !text.isEmpty else { return }
+
+    messages.append(ChatMessage(role: .user, text: text))
+    newMessage = ""
+    isLoading = true
+
+    Task {
+        do {
+            let ai = FirebaseAI.firebaseAI(backend: .googleAI())
+            let model = ai.generativeModel(modelName: "gemini-2.5-flash")
+            let response = try await model.generateContent(text)
+
+            let reply = response.text ?? "Sorry, I didn't get a response."
+            await MainActor.run {
+                messages.append(ChatMessage(role: .assistant, text: reply))
+                isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                messages.append(ChatMessage(role: .assistant, text: "Error: \(error.localizedDescription)"))
+                isLoading = false
             }
         }
     }
 }
+
+}
+
+// Helper to round only top corners
+extension View {
+func cornerRadius(_ radius: CGFloat, corners: UIRectCorner) -> some View {
+clipShape(RoundedCorner(radius: radius, corners: corners))
+}
+}
+
+struct RoundedCorner: Shape {
+var radius: CGFloat = .infinity
+var corners: UIRectCorner = .allCorners
+func path(in rect: CGRect) -> Path {
+    let path = UIBezierPath(
+        roundedRect: rect,
+        byRoundingCorners: corners,
+        cornerRadii: CGSize(width: radius, height: radius)
+    )
+    return Path(path.cgPath)
+}
+
+}
+
+
+
 
 
     // MARK: - Barcode Scanner

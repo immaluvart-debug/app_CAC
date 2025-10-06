@@ -19,6 +19,7 @@
 		4BD37D012E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4BD37D002E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist */; };
 		4BD37D022E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4BD37D002E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist */; };
 		4BD37D032E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4BD37D002E6D2436001B377E /* client_1067294343284-d7l1cnfdjtlhk68smmknho7skmji4i0j.apps.googleusercontent.com.plist */; };
+		4BD58E252E936C2100792A2D /* FirebaseAI in Frameworks */ = {isa = PBXBuildFile; productRef = 4BD58E242E936C2100792A2D /* FirebaseAI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -112,6 +113,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4BD58E252E936C2100792A2D /* FirebaseAI in Frameworks */,
 				4B05420F2E629E0100940CA4 /* FirebaseAnalytics in Frameworks */,
 				4B0542112E629E0100940CA4 /* FirebaseAuth in Frameworks */,
 				4B0542132E629E0100940CA4 /* FirebaseCore in Frameworks */,
@@ -681,6 +683,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4B05420B2E629E0100940CA4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseStorage;
+		};
+		4BD58E242E936C2100792A2D /* FirebaseAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4B05420B2E629E0100940CA4 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
