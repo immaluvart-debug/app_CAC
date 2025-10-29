@@ -14,7 +14,7 @@ import FirebaseStorage
 struct ScanItem: Identifiable, Codable {
     var id: String
     var title: String
-    var energy: Double
+   // var energy: Double
     var fat: Double
     var carbohydrates: Double
     var sugars: Double
@@ -38,12 +38,12 @@ final class FirestoreManager {
     
     private init() {}
     
-    // Save scan item to Firestore
+    //save scan item to Firestore
     func saveScan(for userID: String, scan: ScanItem, completion: ((Error?) -> Void)? = nil) {
         let data: [String: Any] = [
             "id": scan.id,
             "title": scan.title,
-            "energy": scan.energy,
+           // "energy": scan.energy,
             "fat": scan.fat,
             "carbohydrates": scan.carbohydrates,
             "sugars": scan.sugars,
@@ -67,8 +67,7 @@ final class FirestoreManager {
                 completion?(error)
             }
     }
-
-    // Fetch recent scans for a user
+//get da scanss
     func fetchScans(for userID: String, completion: @escaping ([ScanItem]) -> Void) {
         db.collection("users").document(userID).collection("scans")
             .order(by: "scannedAt", descending: true)
@@ -83,7 +82,7 @@ final class FirestoreManager {
                     return ScanItem(
                         id: data["id"] as? String ?? UUID().uuidString,
                         title: data["title"] as? String ?? "Unknown",
-                        energy: data["energy"] as? Double ?? 0,
+                     //   energy: data["energy"] as? Double ?? 0,
                         fat: data["fat"] as? Double ?? 0,
                         carbohydrates: data["carbohydrates"] as? Double ?? 0,
                         sugars: data["sugars"] as? Double ?? 0,
@@ -105,7 +104,7 @@ final class FirestoreManager {
             }
     }
     
-    // Upload custom image to Firebase Storage
+    //upload custom image to Firebase Storage
     func uploadImage(_ image: UIImage, userID: String, completion: @escaping (Result<String, Error>) -> Void) {
         guard let imageData = image.jpegData(compressionQuality: 0.8) else {
             completion(.failure(NSError(domain: "ImageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to compress image"])))
@@ -175,13 +174,10 @@ struct WelcomeView: View {
     @State private var isLogin = true
     @State private var email = ""
     @State private var password = ""
-    // navigation states
     @State private var navigateToHome = false
     @State private var navigateToPreferences = false
-    // ui states
     @State private var errorMessage = ""
     @State private var isLoading = false
-    // transition state
     @State private var isTransitioning = false
 
     var body: some View {
@@ -286,20 +282,32 @@ struct WelcomeView: View {
                                         }
 
                                         Button(action: loginTapped) {
-                                            HStack {
-                                                if isLoading {
-                                                    ProgressView().scaleEffect(0.8)
-                                                }
+                                            ZStack {
+                                         
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .fill(Color("grey"))
+                                                    .frame(width: 100, height: 44)
+                                                
+                             
                                                 Text("OK")
                                                     .font(.headline)
                                                     .foregroundColor(.white)
-                                                    .padding()
-                                                    .frame(width: 100)
-                                                    .background(Color("grey"))
-                                                    .cornerRadius(8)
+                                                    .opacity(isLoading ? 0 : 1)
+                                                    .animation(.easeInOut(duration: 0.2), value: isLoading)
+
+        
+                                                if isLoading {
+                                                    ProgressView()
+                                                        .scaleEffect(0.8)
+                                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                                        .transition(.opacity)
+                                                        .animation(.easeInOut(duration: 0.2), value: isLoading)
+                                                }
                                             }
                                         }
                                         .disabled(email.isEmpty || password.isEmpty || isLoading)
+
+
 
                                     } else {
                                         Text("create email:")
@@ -323,23 +331,34 @@ struct WelcomeView: View {
                                         }
 
                                         Button(action: signUpTapped) {
-                                            HStack {
-                                                if isLoading {
-                                                    ProgressView().scaleEffect(0.8)
-                                                }
+                                            ZStack {
+                                 
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .fill(Color("grey"))
+                                                    .frame(width: 100, height: 44)
+                                                
+                                       
                                                 Text("OK")
                                                     .font(.headline)
                                                     .foregroundColor(.white)
-                                                    .padding()
-                                                    .frame(width: 100)
-                                                    .background(Color("grey"))
-                                                    .cornerRadius(8)
+                                                    .opacity(isLoading ? 0 : 1)
+                                                    .animation(.easeInOut(duration: 0.2), value: isLoading)
+
+                                      
+                                                if isLoading {
+                                                    ProgressView()
+                                                        .scaleEffect(0.8)
+                                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                                        .transition(.opacity)
+                                                        .animation(.easeInOut(duration: 0.2), value: isLoading)
+                                                }
                                             }
                                         }
                                         .disabled(email.isEmpty || password.isEmpty || isLoading)
+
                                     }
 
-                                    // Hidden NavigationLinks — triggered only on success
+                
                                     NavigationLink(destination: HomeView(), isActive: $navigateToHome) { EmptyView() }
                                     NavigationLink(destination: PreferencesView(), isActive: $navigateToPreferences) { EmptyView() }
                                 }
@@ -350,8 +369,6 @@ struct WelcomeView: View {
                     .padding()
                 }
 
-                // overlay goes above everything
-                //TransitionOverlay(show: $isTransitioning)
             }
         }
         .ignoresSafeArea()
@@ -502,7 +519,7 @@ struct LoginView: View {
                         switch result {
                         case .success:
                             errorMessage = ""
-                            navigateToHome = true  // ✅ Navigate only on success
+                            navigateToHome = true
                         case .failure(let error):
                             errorMessage = error.localizedDescription
                             navigateToHome = false
@@ -522,7 +539,7 @@ struct LoginView: View {
             }
             .padding()
             .navigationDestination(isPresented: $navigateToHome) {
-                HomeView()  // ✅ Navigate to HomeView only if login succeeds
+                HomeView()
             }
         }
     }
@@ -770,306 +787,6 @@ struct GoalRow: View {
         .buttonStyle(PlainButtonStyle())
     }
 }
-
-/*
-struct HomeView: View {
-    @State private var celebratedScans: Set<String> = []
-    @EnvironmentObject var favoritesManager: FavoritesManager
-    @State private var selectedScan: ScanItem? = nil
-    @State private var showConfetti = false
-
-    @State private var recentScans: [ScanItem] = []
-    @State private var favoriteScans: [ScanItem] = []
-  //  @State private var animateHeart = false
-    // scanner states
-    @State private var isShowingScanner = false
-    @State private var greenScoreResult: String = ""
-    @State private var productImageURL: URL? = nil
-    @State private var nutritionInfo: String = ""
-
-    // search states
-    @State private var isSearching = false
-    @State private var searchText = ""
-
-    // overlay state
-    @State private var showOverlay = false
-
-    // computed: show filtered scans if searching
-    private var displayedScans: [ScanItem] {
-        if isSearching && !searchText.isEmpty {
-            return recentScans.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
-        } else {
-            return recentScans
-        }
-    }
-
-    var body: some View {
-        ZStack {
-            NavigationView {
-                ZStack {
-                    Color("ourgreen").ignoresSafeArea()
-                    Image("bg-leaves")
-                        .resizable()
-                        .scaledToFill()
-                        .ignoresSafeArea()
-
-                    VStack(spacing: 15) {
-                        // MARK: - Top Logo & Recommended Bar
-                        VStack(spacing: 5) {
-                            Image("app_CAC icon")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 140, height: 140)
-
-                            HStack(spacing: 0) {
-                                NavigationLink(destination: RecommendedFoodsView(recentScans: recentScans)) {
-                                    Text("RECOMMENDED")
-                                        .font(.custom("BebasNeue-Regular", size: 22))
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(Color("grey"))
-                                }
-
-                                NavigationLink(destination: NearbyProductsMapView()) {
-                                    Text("NEAR ME")
-                                        .font(.custom("BebasNeue-Regular", size: 22))
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                        .background(Color("grey"))
-                                }
-                            }
-                            .cornerRadius(5)
-                            .padding(.horizontal, 15)
-                        }
-
-                        // MARK: - Recent Scans Section
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack {
-                                Text("Recent Scans")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
-
-                                Spacer()
-
-                                HStack {
-                                    if isSearching {
-                                        TextField("Search scans...", text: $searchText)
-                                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                                            .frame(maxWidth: 200)
-                                            .transition(.move(edge: .trailing))
-                                    }
-
-                                    Button(action: {
-                                        withAnimation {
-                                            isSearching.toggle()
-                                            if !isSearching { searchText = "" }
-                                        }
-                                    }) {
-                                        Image(systemName: "magnifyingglass.circle")
-                                            .resizable()
-                                            .frame(width: 27, height: 27)
-                                            .foregroundColor(.gray)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 15)
-                            .padding(.top, 5)
-
-                            ScrollView {
-                                VStack(spacing: 15) {
-                                    if displayedScans.isEmpty {
-                                        Text("No recent scans found")
-                                            .foregroundColor(.gray)
-                                            .frame(maxWidth: .infinity, minHeight: 300)
-                                            .multilineTextAlignment(.center)
-                                    } else {
-                                        ForEach(displayedScans) { scan in
-                                            Button(action: {
-                                                selectedScan = scan
-                                            }) {
-                                                ScanRowView(scan: scan)
-                                            }
-                                            .buttonStyle(PlainButtonStyle())
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal, 15)
-                                .padding(.vertical, 10)
-                            }
-                        }
-                        .background(Color("lightestgreen"))
-                        .cornerRadius(15)
-                        .padding(.horizontal, 10)
-                        .frame(height: 400)
-
-                        // MARK: - Scan Button
-                        Button("SCAN") {
-                            isShowingScanner = true
-                        }
-                        .font(.custom("BebasNeue-Regular", size: 30))
-                        .frame(width: 180, height: 60)
-                        .foregroundColor(.white)
-                        .background(Color("grey"))
-                        .cornerRadius(10)
-                        .sheet(isPresented: $isShowingScanner) {
-                            BarcodeScannerView { barcode in
-                                isShowingScanner = false
-                                fetchGreenScore(for: barcode)
-                            }
-                        }
-
-                        Spacer()
-                    }
-                }
-                .toolbar {
-                    ToolbarItemGroup(placement: .navigationBarTrailing) {
-                            // Calendar icon
-                            NavigationLink(destination: HabitTrackerView()) {
-                                Image("calendar_icon")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.white)
-                            }
-
-                            // Heart icon
-                            NavigationLink(destination: FavoritesView()
-                                .environmentObject(favoritesManager)) {
-                                Image("heart_icon")
-                                    .resizable()
-                                    .frame(width: 28, height: 28)
-                        }
-                    }
-                }
-            }
-            // Transition overlay sits above NavigationView
-            TransitionOverlay(show: $showOverlay)
-                .zIndex(5)
-        }
-       
-
-        // ✅ Confetti sits ABOVE EVERYTHING (including sheets)
-        .overlay(
-            Group {
-                if showConfetti {
-                    ConfettiView()
-                        .ignoresSafeArea()
-                        .transition(.opacity)
-                        .zIndex(1000) // super high priority
-                }
-            }
-        )
-        .onAppear {
-            showOverlay = true
-            if let user = Auth.auth().currentUser {
-                FirestoreManager.shared.fetchScans(for: user.uid) { scans in
-                    self.recentScans = scans.sorted { $0.scannedAt > $1.scannedAt }
-                }
-            }
-        }
-        .sheet(item: $selectedScan) { scan in
-            ScanDetailsView(scan: scan, onCelebrate: {
-                if !celebratedScans.contains(scan.id) {   // 👈 only if new
-                    celebratedScans.insert(scan.id)
-                    withAnimation {
-                        showConfetti = true
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                        showConfetti = false
-                    }
-                }
-            })
-            .environmentObject(favoritesManager)
-        }
-        .presentationDetents([.large])
-    }
-
-  
-
-    private func scanItem(scan: ScanItem) -> some View {
-        @State var animateHeart = false
-        return VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 15) {
-                AsyncImage(url: URL(string: scan.imageURL)) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView()
-                            .frame(width: 80, height: 80)
-                    case .success(let image):
-                        image.resizable()
-                            .scaledToFill()
-                            .frame(width: 80, height: 80)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    case .failure:
-                        Image(systemName: "photo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 80, height: 80)
-                            .background(Color.gray.opacity(0.3))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(scan.title)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .lineLimit(2)
-
-                        Spacer()
-
-                        Button(action: {
-                            favoritesManager.toggleFavorite(scan: scan)
-                            triggerSuccessHaptic()
-
-                            // trigger animation
-                            withAnimation(.easeInOut(duration: 0.3)) {
-                                animateHeart = true
-                            }
-                            // reset after short delay
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                                animateHeart = false
-                            }
-                        }) {
-                            Image(systemName: favoritesManager.isFavorite(scan) ? "heart.fill" : "heart")
-                                .foregroundColor(favoritesManager.isFavorite(scan) ? .red : .white)
-                                .scaleEffect(animateHeart ? 2.7 : 1.0) // bounce bigger
-                                .shadow(color: animateHeart ? .red.opacity(0.7) : .clear,
-                                        radius: 15, x: 0, y: 0)       // glowing effect
-                                .animation(.spring(), value: animateHeart)
-                        }
-
-                    }
-
-                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
-                    Text("Fat: \(String(format: "%.2f", scan.fat)) g").foregroundColor(.white)
-                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g").foregroundColor(.white)
-                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g").foregroundColor(.white)
-                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g").foregroundColor(.white)
-                }
-            }
-            .padding()
-            .background(Color("grey"))
-            .cornerRadius(15)
-
-            Text("GREEN SCORE: \(scan.greenScore)")
-                .font(.custom("BebasNeue-Regular", size: 18))
-                .frame(width: 300, height: 35)
-                .background(
-                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
-                    ? Color.green
-                    : Color.red
-                )
-                .cornerRadius(8)
-                .foregroundColor(.white)
-                .padding(.top, 5)
-        }
-    }
-      */
 struct HomeView: View {
     @State private var celebratedScans: Set<String> = []
     @EnvironmentObject var favoritesManager: FavoritesManager
@@ -1260,162 +977,114 @@ struct HomeView: View {
     }
 
     func fetchGreenScore(for barcode: String) {
-        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json") else { greenScoreResult = "Invalid barcode"; return }
+        guard let url = URL(string: "https://world.openfoodfacts.org/api/v0/product/\(barcode).json") else {
+            greenScoreResult = "Invalid barcode"
+            return
+        }
+
         URLSession.shared.dataTask(with: url) { data, _, _ in
-            guard let data = data else { DispatchQueue.main.async { greenScoreResult = "No data from server" }; return }
-            struct Nutriments: Codable { let energy_kcal, fat, carbohydrates, sugars, fiber, proteins, salt: Double? }
-            struct Product: Codable { let product_name, ecoscore_grade, image_url, brands, processing_score: String?; let nutriments: Nutriments?; let labels_tags, origins_tags, misc_tags: [String]? }
-            struct Response: Codable { let product: Product? }
-            if let decoded = try? JSONDecoder().decode(Response.self, from: data), let product = decoded.product {
-                let scanItem = ScanItem(id: UUID().uuidString, title: product.product_name ?? "Unknown Product", energy: product.nutriments?.energy_kcal ?? 0, fat: product.nutriments?.fat ?? 0, carbohydrates: product.nutriments?.carbohydrates ?? 0, sugars: product.nutriments?.sugars ?? 0, fiber: product.nutriments?.fiber ?? 0, proteins: product.nutriments?.proteins ?? 0, salt: product.nutriments?.salt ?? 0, greenScore: product.ecoscore_grade?.uppercased() ?? "Unknown", imageURL: product.image_url ?? "", scannedAt: Date(), brand: product.brands ?? "Unknown", labels: product.labels_tags ?? [], origin: product.origins_tags?.first ?? "Unknown", biodiversity: product.misc_tags?.first ?? "Unknown", processingScore: product.processing_score ?? "N/A")
+            guard let data = data else {
+                DispatchQueue.main.async {
+                    greenScoreResult = "No data from server"
+                }
+                return
+            }
+
+            // MARK: - Codable structs (defined once)
+            struct Nutriments: Codable {
+                let energy_kcal, fat, carbohydrates, sugars, fiber, proteins, salt: Double?
+            }
+
+            struct Product: Codable {
+                let product_name: String?
+                let ecoscore_grade: String?
+                let image_url: String?
+                let brands: String?
+                let labels_tags: [String]?
+                let origins_tags: [String]?
+                let biodiversity_grade: String?
+                let nova_group: Int?
+                let nutriments: Nutriments?
+            }
+
+            struct Response: Codable {
+                let product: Product?
+            }
+
+            // MARK: - Decode JSON
+            if let decoded = try? JSONDecoder().decode(Response.self, from: data),
+               let product = decoded.product {
+
+                let scanItem = ScanItem(
+                    id: UUID().uuidString,
+                    title: product.product_name ?? "Unknown Product",
+                    fat: product.nutriments?.fat ?? 0,
+                    carbohydrates: product.nutriments?.carbohydrates ?? 0,
+                    sugars: product.nutriments?.sugars ?? 0,
+                    fiber: product.nutriments?.fiber ?? 0,
+                    proteins: product.nutriments?.proteins ?? 0,
+                    salt: product.nutriments?.salt ?? 0,
+                    greenScore: product.ecoscore_grade?.uppercased() ?? "Unknown",
+                    imageURL: product.image_url ?? "",
+                    scannedAt: Date(),
+                    brand: product.brands ?? "Unknown",
+                    labels: product.labels_tags ?? [],
+                    origin: product.origins_tags?.first ?? "Unknown",
+                    biodiversity: product.biodiversity_grade ?? "Unknown",
+                    processingScore: product.nova_group.map { "NOVA Group \($0)" } ?? "N/A"
+                )
+
+                // MARK: - Update UI on main thread
                 DispatchQueue.main.async {
                     greenScoreResult = product.ecoscore_grade?.uppercased() ?? "Unknown"
-                    if scanItem.greenScore == "A" || scanItem.greenScore == "B" { withAnimation { showConfetti = true }; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { showConfetti = false } }
+
+                    if scanItem.greenScore == "A" || scanItem.greenScore == "B" {
+                        withAnimation { showConfetti = true }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            showConfetti = false
+                        }
+                    }
+
                     recentScans.insert(scanItem, at: 0)
                     selectedScan = scanItem
-                    if let imageURLString = product.image_url, let url = URL(string: imageURLString) { productImageURL = url } else { productImageURL = nil }
-                    if let n = product.nutriments { nutritionInfo = "Energy: \(n.energy_kcal ?? 0) kcal\nFat: \(n.fat ?? 0) g\nCarbs: \(n.carbohydrates ?? 0) g\nSugars: \(n.sugars ?? 0) g\nFiber: \(n.fiber ?? 0) g\nProteins: \(n.proteins ?? 0) g\nSalt: \(n.salt ?? 0) g" } else { nutritionInfo = "No nutrition data available" }
-                    if let user = Auth.auth().currentUser { FirestoreManager.shared.saveScan(for: user.uid, scan: scanItem) }
+
+                    // Load product image
+                    if let imageURLString = product.image_url,
+                       let url = URL(string: imageURLString) {
+                        productImageURL = url
+                    } else {
+                        productImageURL = nil
+                    }
+
+                    // Show nutrition info
+                    if let n = product.nutriments {
+                        nutritionInfo = """
+                        Energy: \(n.energy_kcal ?? 0) kcal
+                        Fat: \(n.fat ?? 0) g
+                        Carbs: \(n.carbohydrates ?? 0) g
+                        Sugars: \(n.sugars ?? 0) g
+                        Fiber: \(n.fiber ?? 0) g
+                        Proteins: \(n.proteins ?? 0) g
+                        Salt: \(n.salt ?? 0) g
+                        """
+                    } else {
+                        nutritionInfo = "No nutrition data available"
+                    }
+
+                    // Save to Firestore if logged in
+                    if let user = Auth.auth().currentUser {
+                        FirestoreManager.shared.saveScan(for: user.uid, scan: scanItem)
+                    }
                 }
-            } else { DispatchQueue.main.async { greenScoreResult = "Error decoding data" } }
+
+            } else {
+                DispatchQueue.main.async {
+                    greenScoreResult = "Error decoding data"
+                }
+            }
         }.resume()
     }
 }
-
-
-//struct ChatBotView: View {
-//struct ChatMessage: Identifiable, Hashable {
-//enum Role { case user, assistant }
-//let id = UUID()
-//let role: Role
-//let text: String
-//}
-//
-//@State private var messages: [ChatMessage] = [
-//    ChatMessage(role: .assistant, text: "👋 Hi! I’m your food assistant. Ask me about nutrition, eco-scores, or healthy choices.")
-//]
-//@State private var newMessage: String = ""
-//@State private var isLoading = false
-//
-//var body: some View {
-//    ZStack {
-//        Color("ourgreen").ignoresSafeArea()
-//
-//        VStack {
-//            Spacer()
-//
-//            VStack {
-//                ScrollViewReader { proxy in
-//                    ScrollView {
-//                        VStack(spacing: 10) {
-//                            ForEach(messages) { msg in
-//                                HStack {
-//                                    if msg.role == .user {
-//                                        Spacer()
-//                                        Text(msg.text)
-//                                            .padding(10)
-//                                            .background(Color.blue.opacity(0.85))
-//                                            .foregroundColor(.white)
-//                                            .cornerRadius(10)
-//                                            .frame(maxWidth: .infinity, alignment: .trailing)
-//                                    } else {
-//                                        Text(msg.text)
-//                                            .padding(10)
-//                                            .background(Color.white)
-//                                            .foregroundColor(.black)
-//                                            .cornerRadius(10)
-//                                            .frame(maxWidth: .infinity, alignment: .leading)
-//                                        Spacer()
-//                                    }
-//                                }
-//                                .id(msg.id)
-//                                .padding(.horizontal, 8)
-//                            }
-//
-//                            if isLoading {
-//                                HStack {
-//                                    ProgressView()
-//                                    Text("Thinking...")
-//                                        .foregroundColor(.gray)
-//                                }
-//                                .padding()
-//                            }
-//                        }
-//                        .padding(.vertical, 10)
-//                    }
-//                    .onChange(of: messages.count) { _ in
-//                        if let last = messages.last {
-//                            withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
-//                        }
-//                    }
-//                }
-//
-//                HStack(spacing: 12) {
-//                    TextField("Type a message...", text: $newMessage)
-//                        .textFieldStyle(RoundedBorderTextFieldStyle())
-//                        .disabled(isLoading)
-//                        .frame(minHeight: 36)
-//
-//                    Button(action: { sendMessage() }) {
-//                        if isLoading {
-//                            ProgressView()
-//                                .scaleEffect(0.9)
-//                                .frame(width: 60, height: 36)
-//                        } else {
-//                            Text("Send")
-//                                .bold()
-//                                .frame(width: 60, height: 36)
-//                        }
-//                    }
-//                    .disabled(newMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading)
-//                    .background(isLoading ? Color.gray.opacity(0.3) : Color("darkestGrey"))
-//                    .foregroundColor(.white)
-//                    .cornerRadius(8)
-//                }
-//                .padding()
-//            }
-//            .background(Color("grey"))
-//            .cornerRadius(20)
-//            .padding(.horizontal, 16)
-//            .padding(.vertical, 60)
-//            .frame(maxHeight: .infinity)
-//
-//            Spacer()
-//        }
-//    }
-//}
-//
-//func sendMessage() {
-//    let text = newMessage.trimmingCharacters(in: .whitespacesAndNewlines)
-//    guard !text.isEmpty else { return }
-//
-//    messages.append(ChatMessage(role: .user, text: text))
-//    newMessage = ""
-//    isLoading = true
-//
-//    Task {
-//        do {
-//            let ai = FirebaseAI.firebaseAI(backend: .googleAI())
-//            let model = ai.generativeModel(modelName: "gemini-2.5-flash")
-//            let response = try await model.generateContent(text)
-//
-//            let reply = response.text ?? "Sorry, I didn't get a response."
-//            await MainActor.run {
-//                messages.append(ChatMessage(role: .assistant, text: reply))
-//                isLoading = false
-//            }
-//        } catch {
-//            await MainActor.run {
-//                messages.append(ChatMessage(role: .assistant, text: "Error: \(error.localizedDescription)"))
-//                isLoading = false
-//            }
-//        }
-//    }
-//}
-//
-//
-//}
-
 
 import SwiftUI
 import FirebaseCore
@@ -1435,6 +1104,8 @@ let text: String
 @State private var newMessage: String = ""
 @State private var isLoading = false
     @State private var rotation = 0.0
+    @State private var keyboardHeight: CGFloat = 0
+
 
 var body: some View {
     ZStack {
@@ -1462,14 +1133,15 @@ var body: some View {
                                 HStack {
                                     if msg.role == .user {
                                         Spacer()
-                                        Text(msg.text)
+                                        Text(.init(msg.text))
+
                                             .padding(10)
                                             .background(Color("ourgreen"))
                                             .foregroundColor(.white)
                                             .cornerRadius(10)
                                             .frame(maxWidth: .infinity, alignment: .trailing)
                                     } else {
-                                        Text(msg.text)
+                                        Text(.init(msg.text))
                                             .padding(10)
                                             .background(Color.white)
                                             .foregroundColor(.black)
@@ -1552,12 +1224,18 @@ var body: some View {
             .background(Color("grey"))
             .cornerRadius(20)
             .padding(.horizontal, 16)
-            .padding(.top, 90)   // 🔥 More top padding
-            .padding(.bottom, 24) // Bottom stays the same
+            .padding(.top, 90)
+            .padding(.bottom, 24)
             .frame(maxHeight: .infinity)
 
             Spacer()
         }
+            .padding(.bottom, keyboardHeight)
+            .onReceive(Publishers.keyboardHeight) { height in
+                withAnimation(.easeOut(duration: 0.25)) {
+                    self.keyboardHeight = height
+                }
+            }
     }
 }
 
@@ -1577,7 +1255,7 @@ func sendMessage() {
 
             let reply = response.text ?? "Sorry, I didn't get a response."
             await MainActor.run {
-                messages.append(ChatMessage(role: .assistant, text: reply))
+                messages.append(ChatMessage(role: .assistant, text: reply.cleanedMarkdown()))
                 isLoading = false
             }
         } catch {
@@ -1589,6 +1267,31 @@ func sendMessage() {
     }
 }
 
+}
+import Combine
+
+extension Publishers {
+    static var keyboardHeight: AnyPublisher<CGFloat, Never> {
+        let willShow = NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)
+            .map { ($0.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect)?.height ?? 0 }
+
+        let willHide = NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+            .map { _ in CGFloat(0) }
+
+        return MergeMany(willShow, willHide)
+            .eraseToAnyPublisher()
+    }
+}
+
+
+extension String {
+    func cleanedMarkdown() -> String {
+        self
+            .replacingOccurrences(of: "### ", with: "")
+            .replacingOccurrences(of: "## ", with: "")
+            .replacingOccurrences(of: "# ", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 }
 
 // Helper to round only top corners
@@ -1740,7 +1443,7 @@ struct ScanRowView: View {
                         }
                     }
 
-                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
+                  //  Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
                     Text("Fat: \(String(format: "%.2f", scan.fat)) g").foregroundColor(.white)
                     Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g").foregroundColor(.white)
                     Text("Sugars: \(String(format: "%.2f", scan.sugars)) g").foregroundColor(.white)
@@ -1992,20 +1695,16 @@ struct RecommendedFoodsView: View {
         }
     }
 
-
-    // Fetch recommendations using your existing APIManager (do NOT pre-filter here;
-    // keep the full list so toggles can filter locally)
     private func fetchRecommendedFoods() {
         let keywords = recentScans.map { $0.title }
         APIManager.shared.fetchRecommendations(basedOn: keywords) { foods in
             DispatchQueue.main.async {
-                self.recommendedFoods = foods   // keep all results so filters can be applied
+                self.recommendedFoods = foods
                 self.isLoading = false
             }
         }
     }
 
-    // Reuse your scanItem view layout (keeps UI consistent with the rest of the app)
     private func scanItem(scan: ScanItem) -> some View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 15) {
@@ -2036,8 +1735,8 @@ struct RecommendedFoodsView: View {
                         .foregroundColor(.white)
                         .lineLimit(2)
 
-                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal")
-                        .foregroundColor(.white)
+                  //  Text("Energy: \(String(format: "%.2f", scan.energy)) kcal")
+                    //    .foregroundColor(.white)
                     Text("Fat: \(String(format: "%.2f", scan.fat)) g")
                         .foregroundColor(.white)
                     Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g")
@@ -2068,141 +1767,6 @@ struct RecommendedFoodsView: View {
     }
 }
 
-/*
-struct RecommendedFoodsView: View {
-    @State private var recommendedFoods: [ScanItem] = []
-    @State private var isLoading = true
-    @State private var selectedScan: ScanItem? = nil
-    @EnvironmentObject var favoritesManager: FavoritesManager
-
-    var recentScans: [ScanItem]
-
-    var body: some View {
-        ZStack {
-            Color("ourgreen").ignoresSafeArea()
-
-            VStack(alignment: .leading, spacing: 15) {
-                Text("Your Recommended GreenScore-Friendly Foods")
-                    .font(.custom("BebasNeue-Regular", size: 30))
-                    .foregroundColor(.white)
-                    .padding(.top, 20)
-                    .padding(.horizontal)
-
-                if isLoading {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if recommendedFoods.isEmpty {
-                    Text("No recommendations found.")
-                        .foregroundColor(.white)
-                        .padding()
-                        .font(.headline)
-                        .frame(maxWidth: .infinity)
-                } else {
-                    ScrollView {
-                        VStack(spacing: 15) {
-                            ForEach(recommendedFoods) { food in
-                                Button(action: {
-                                    selectedScan = food
-                                }) {
-                                    scanItem(scan: food)
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                            }
-
-
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-
-                Spacer()
-            }
-        }
-        .sheet(item: $selectedScan) { scan in
-            ScanDetailsView(scan: scan)
-                .environmentObject(favoritesManager) // ✅ Pass it in
-        }
-
-        .onAppear(perform: fetchRecommendedFoods)
-        
-
-    }
-    
-
-    private func fetchRecommendedFoods() {
-        // Extract keywords (e.g., titles from recent scans)
-        let keywords = recentScans.map { $0.title }
-
-        APIManager.shared.fetchRecommendations(basedOn: keywords) { foods in
-            DispatchQueue.main.async {
-                self.recommendedFoods = foods.filter {
-                    $0.greenScore.uppercased() == "A" || $0.greenScore.uppercased() == "B"
-                }
-                self.isLoading = false
-            }
-        }
-    }
-
-    private func scanItem(scan: ScanItem) -> some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .top, spacing: 15) {
-                AsyncImage(url: URL(string: scan.imageURL)) { phase in
-                    switch phase {
-                    case .empty:
-                        ProgressView().frame(width: 80, height: 80)
-                    case .success(let image):
-                        image.resizable()
-                            .scaledToFill()
-                            .frame(width: 80, height: 80)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    case .failure:
-                        Image(systemName: "photo")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 80, height: 80)
-                            .background(Color.gray.opacity(0.3))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                    @unknown default:
-                        EmptyView()
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(scan.title)
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .lineLimit(2)
-
-                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal")
-                        .foregroundColor(.white)
-                    Text("Fat: \(String(format: "%.2f", scan.fat)) g")
-                        .foregroundColor(.white)
-                    Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g")
-                        .foregroundColor(.white)
-                    Text("Sugars: \(String(format: "%.2f", scan.sugars)) g")
-                        .foregroundColor(.white)
-                    Text("Fiber: \(String(format: "%.2f", scan.fiber)) g")
-                        .foregroundColor(.white)
-                }
-            }
-            .padding()
-            .background(Color("grey"))
-            .cornerRadius(15)
-
-            Text("GREEN SCORE: \(scan.greenScore)")
-                .font(.custom("BebasNeue-Regular", size: 18))
-                .frame(width: 300, height: 35)
-                .background(
-                    scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
-                    ? Color.green
-                    : Color.red
-                )
-                .cornerRadius(8)
-                .foregroundColor(.white)
-                .padding(.top, 5)
-        }
-    }
-}*/
 
 //MARK: - Recommended Food Search
 final class APIManager {
@@ -2239,7 +1803,7 @@ final class APIManager {
                     return ScanItem(
                         id: UUID().uuidString,
                         title: name,
-                        energy: product.nutriments.energy_kcal ?? 0,
+                        //energy: product.nutriments.energy_kcal ?? 0,
                         fat: product.nutriments.fat ?? 0,
                         carbohydrates: product.nutriments.carbohydrates ?? 0,
                         sugars: product.nutriments.sugars ?? 0,
@@ -2325,7 +1889,6 @@ struct FavoritesView: View {
                 Spacer()
             }
         }
-        // ✅ Only one sheet, triggered by selectedScan
         .sheet(item: $selectedScan) { scan in
             ScanDetailsView(scan: scan) // No showDetails needed
         }
@@ -2362,7 +1925,7 @@ struct FavoritesView: View {
                         .foregroundColor(.white)
                         .lineLimit(2)
 
-                    Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
+                   // Text("Energy: \(String(format: "%.2f", scan.energy)) kcal").foregroundColor(.white)
                     Text("Fat: \(String(format: "%.2f", scan.fat)) g").foregroundColor(.white)
                     Text("Carbs: \(String(format: "%.2f", scan.carbohydrates)) g").foregroundColor(.white)
                     Text("Sugars: \(String(format: "%.2f", scan.sugars)) g").foregroundColor(.white)
@@ -2401,7 +1964,7 @@ struct ScanDetailsView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // --- Top bar with Close + Heart ---
+
             HStack {
                 Button(action: {
                     favoritesManager.toggleFavorite(scan: scan)
@@ -2424,7 +1987,6 @@ struct ScanDetailsView: View {
                 }
             }
             
-            // --- Always visible content (title, image, Nutri-Score) ---
             VStack(spacing: 12) {
                 // Food name
                 Text(scan.title ?? "Unknown Item")
@@ -2489,7 +2051,7 @@ struct ScanDetailsView: View {
                     // Nutrition Info Tab
                     ScrollView {
                         VStack(spacing: 10) {
-                            nutritionRow("Energy", "\(String(format: "%.2f", scan.energy)) kcal")
+                            //nutritionRow("Energy", "\(String(format: "%.2f", scan.energy)) kcal")
                             nutritionRow("Fat", "\(String(format: "%.2f", scan.fat)) g")
                             nutritionRow("Carbohydrates", "\(String(format: "%.2f", scan.carbohydrates)) g")
                             nutritionRow("Sugars", "\(String(format: "%.2f", scan.sugars)) g")
@@ -2563,15 +2125,9 @@ struct ScanDetailsView: View {
             }
 
         }
-        // 👇 Apply lighter Nutri-Score tint background
-        /*.background(
-            (scan.greenScore.uppercased() == "A" || scan.greenScore.uppercased() == "B"
-                ? Color.green
-                : Color.red
-            )*/
+        
         .background(Image("bg-leaf").resizable().scaledToFill())
         .ignoresSafeArea()
-           // .opacity(0.3)   // 👈 tweak this value (0.1 → 0.3 looks good)
             .ignoresSafeArea()
         
     }
@@ -2619,8 +2175,8 @@ struct TransitionOverlay: View {
                             }
                         }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                            show = false // hide after full sweep
-                            xOffset = -screenWidth // reset for next time
+                            show = false
+                            xOffset = -screenWidth
                         }
                     }
             }
@@ -2656,13 +2212,13 @@ struct ConfettiView: View {
                         )
                 }
             }
-            .frame(width: geo.size.width, height: geo.size.height) // 👈 fill full screen
-            .contentShape(Rectangle()) // ensures it takes full space
+            .frame(width: geo.size.width, height: geo.size.height)
+            .contentShape(Rectangle())
             .onAppear {
                                   animate = true
             }
         }
-        .ignoresSafeArea() // 👈 makes sure it goes edge to edge
+        .ignoresSafeArea()
         .background(Color.clear)
     }
 }
