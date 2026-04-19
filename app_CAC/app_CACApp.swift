@@ -17,6 +17,7 @@ import Firebase
 @main
 struct app_CACApp: App {
     @StateObject var favoritesManager = FavoritesManager()
+    @StateObject var scansManager = ScansManager()
     init() {
         FirebaseApp.configure()
     }
@@ -25,6 +26,7 @@ struct app_CACApp: App {
         WindowGroup {
             WelcomeView()
                 .environmentObject(favoritesManager)
+                .environmentObject(scansManager)
         }
     }
 }

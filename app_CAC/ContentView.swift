@@ -792,7 +792,7 @@ struct HomeView: View {
     @EnvironmentObject var favoritesManager: FavoritesManager
     @State private var selectedScan: ScanItem? = nil
     @State private var showConfetti = false
-    @State private var recentScans: [ScanItem] = []
+    @EnvironmentObject var scansManager: ScansManager
     @State private var favoriteScans: [ScanItem] = []
     @State private var isShowingScanner = false
     @State private var greenScoreResult: String = ""
@@ -806,9 +806,9 @@ struct HomeView: View {
 
     private var displayedScans: [ScanItem] {
         if isSearching && !searchText.isEmpty {
-            return recentScans.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+            return scansManager.recentScans.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
         } else {
-            return recentScans
+            return scansManager.recentScans
         }
     }
 
@@ -829,7 +829,7 @@ struct HomeView: View {
                             Image("app_CAC icon").resizable().scaledToFit().frame(width: 140, height: 140)
 
                             HStack(spacing: 0) {
-                                NavigationLink(destination: RecommendedFoodsView(recentScans: recentScans)) {
+                                NavigationLink(destination: RecommendedFoodsView(recentScans: scansManager.recentScans)) {
                                     Text("RECOMMENDED")
                                         .font(.custom("BebasNeue-Regular", size: 22))
                                         .foregroundColor(.white)
@@ -950,11 +950,7 @@ struct HomeView: View {
         .ignoresSafeArea()
         .onAppear {
             showOverlay = true
-            if let user = Auth.auth().currentUser {
-                FirestoreManager.shared.fetchScans(for: user.uid) { scans in
-                    self.recentScans = scans.sorted { $0.scannedAt > $1.scannedAt }
-                }
-            }
+            scansManager.loadScans()
         }
         .sheet(item: $selectedScan) { scan in
             ScanDetailsView(scan: scan, onCelebrate: {
@@ -1045,7 +1041,7 @@ struct HomeView: View {
                         }
                     }
 
-                    recentScans.insert(scanItem, at: 0)
+                    scansManager.addScan(scanItem)
                     selectedScan = scanItem
 
                     // Load product image
@@ -1073,7 +1069,13 @@ struct HomeView: View {
 
                     // Save to Firestore if logged in
                     if let user = Auth.auth().currentUser {
-                        FirestoreManager.shared.saveScan(for: user.uid, scan: scanItem)
+                        FirestoreManager.shared.saveScan(for: user.uid, scan: scanItem) { error in
+                            if let error = error {
+                                print("❌ Firestore save failed: \(error.localizedDescription)")
+                            } else {
+                                print("✅ Scan saved successfully")
+                            }
+                        }
                     }
                 }
 
@@ -1847,7 +1849,29 @@ struct OFFNutriments: Codable {
     let proteins: Double?
     let salt: Double?
 }
-
+class ScansManager: ObservableObject {
+    @Published var recentScans: [ScanItem] = []
+    
+    func loadScans() {
+        guard let user = Auth.auth().currentUser else { return }
+        FirestoreManager.shared.fetchScans(for: user.uid) { scans in
+            DispatchQueue.main.async {
+                self.recentScans = scans.sorted { $0.scannedAt > $1.scannedAt }
+            }
+        }
+    }
+    
+    func addScan(_ scan: ScanItem) {
+        recentScans.insert(scan, at: 0)
+        if let user = Auth.auth().currentUser {
+            FirestoreManager.shared.saveScan(for: user.uid, scan: scan) { error in
+                if let error = error {
+                    print("❌ Save failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+}
 //MARK: - Favorites View
 struct FavoritesView: View {
     @EnvironmentObject var favoritesManager: FavoritesManager
@@ -2580,5 +2604,6 @@ struct MonthView: View {
         .padding(.horizontal)
     }
 }
+
 
 
