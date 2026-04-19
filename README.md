@@ -16,7 +16,7 @@ Features:
 
 HOW TO USE:
 Use on iPhone and turn on Light Mode
-1. Connect a computer (where the code is) to an iPhone via a cable so the app gets downloaded on the iPhone (You can also use simulator but scanning wont work with it)
+1. Connect a computer (where the code is) to an iPhone via a cable so the app gets downloaded on the iPhone (You can also use simulator but scanning wont work with it, and you can disconnect the cable once the phone is connected.)
 2. Directly run the code and click "SIGN UP"
 3. Enter in any email (ex: sanvi@gmail.com) and any password greater than 6 letters.
 4. Choose preferences and click OK
